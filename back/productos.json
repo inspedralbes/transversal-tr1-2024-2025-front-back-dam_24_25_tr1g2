@@ -1,0 +1,19 @@
+{
+    "productos": [
+        {
+            "name": "Blue Label",
+            "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQko9iqjKAmWUk6Nt59EY8CJ6mOz8DbUiAdAA&s",
+            "price": 189.00
+        },
+        {
+            "name": "Black Label",
+            "image_url": "https://example.com/image_black_label.jpg",
+            "price": 39.99
+        },
+        {
+            "name": "Red Label",
+            "image_url": "https://example.com/image_red_label.jpg",
+            "price": 29.99
+        }
+    ]
+}

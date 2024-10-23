@@ -1,5 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2');
+const fs = require('fs'); // Para leer el archivo JSON
 const app = express();
 const port = 3000;
 // const port = 23457;
@@ -29,6 +30,43 @@ db.connect((err) => {
         return;
     }
     console.log('Conexión exitosa a la base de datos.');
+
+    // Crear tabla si no existe
+    const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS productos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            image_url VARCHAR(255) NOT NULL,
+            price DECIMAL(10, 2) NOT NULL
+        )`;
+
+    db.query(createTableQuery, (err) => {
+        if (err) {
+            console.error('Error al crear la tabla:', err);
+            return;
+        }
+        console.log('Tabla "productos" creada o ya existe.');
+
+        // Leer el archivo JSON
+        fs.readFile('productos.json', 'utf8', (err, data) => {
+            if (err) {
+                console.error('Error al leer el archivo JSON:', err);
+                return;
+            }
+            const productos = JSON.parse(data).productos;
+
+            // Insertar los productos en la base de datos
+            productos.forEach(producto => {
+                const insertQuery = 'INSERT INTO productos (name, image_url, price) VALUES (?, ?, ?)';
+                db.query(insertQuery, [producto.name, producto.image_url, producto.price], (err) => {
+                    if (err) {
+                        console.error('Error al insertar el producto:', err);
+                    }
+                });
+            });
+            console.log('Productos insertados en la tabla "productos".');
+        });
+    });
 });
 
 // Obtener todos los productos
@@ -44,91 +82,6 @@ app.get('/api/productos', (req, res) => {
     });
 });
 
-// Insertar un solo producto
-app.post('/api/productos', (req, res) => {
-    const { name, image_url, price } = req.body;
-    
-    if (!name || !image_url || !price) {
-        return res.status(400).send('Todos los campos (name, image_url, price) son obligatorios.');
-    }
-
-    const query = 'INSERT INTO productos (name, image_url, price) VALUES (?, ?, ?)';
-    
-    db.query(query, [name, image_url, price], (err, result) => {
-        if (err) {
-            console.error('Error al insertar producto:', err);
-            return res.status(500).send('Error al insertar producto en la base de datos.');
-        }
-        res.status(201).send('Producto creado exitosamente.');
-    });
-});
-
-// Insertar varios productos desde un JSON
-app.post('/api/productos/multiple', (req, res) => {
-    const productos = req.body.productos;
-
-    if (!productos || !Array.isArray(productos)) {
-        return res.status(400).send('El cuerpo de la solicitud debe contener un array de productos.');
-    }
-
-    const query = 'INSERT INTO productos (name, image_url, price) VALUES ?';
-
-    // Mapeamos el array de productos para obtener las columnas en el formato correcto
-    const values = productos.map(producto => [producto.name, producto.image_url, producto.price]);
-
-    db.query(query, [values], (err, result) => {
-        if (err) {
-            console.error('Error al insertar productos:', err);
-            return res.status(500).send('Error al insertar productos en la base de datos.');
-        }
-        res.status(201).send(`Se han insertado ${result.affectedRows} productos exitosamente.`);
-    });
-});
-
-// Editar un producto existente
-app.put('/api/productos/:id', (req, res) => {
-    const { id } = req.params;
-    const { name, image_url, price } = req.body;
-    
-    if (!name || !image_url || !price) {
-        return res.status(400).send('Todos los campos (name, image_url, price) son obligatorios.');
-    }
-
-    const query = 'UPDATE productos SET name = ?, image_url = ?, price = ? WHERE id = ?';
-    
-    db.query(query, [name, image_url, price, id], (err, result) => {
-        if (err) {
-            console.error('Error al actualizar producto:', err);
-            return res.status(500).send('Error al actualizar el producto.');
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).send('Producto no encontrado.');
-        }
-
-        res.send('Producto actualizado exitosamente.');
-    });
-});
-
-// Eliminar un producto
-app.delete('/api/productos/:id', (req, res) => {
-    const { id } = req.params;
-
-    const query = 'DELETE FROM productos WHERE id = ?';
-    
-    db.query(query, [id], (err, result) => {
-        if (err) {
-            console.error('Error al eliminar producto:', err);
-            return res.status(500).send('Error al eliminar el producto.');
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).send('Producto no encontrado.');
-        }
-
-        res.send('Producto eliminado exitosamente.');
-    });
-});
 
 app.listen(port, () => {
     // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
