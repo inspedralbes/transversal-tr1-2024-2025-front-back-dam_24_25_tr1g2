@@ -57,14 +57,30 @@ db.connect((err) => {
 
             // Insertar los productos en la base de datos
             productos.forEach(producto => {
-                const insertQuery = 'INSERT INTO productos (name, image_url, price) VALUES (?, ?, ?)';
-                db.query(insertQuery, [producto.name, producto.image_url, producto.price], (err) => {
+                const checkQuery = 'SELECT * FROM productos WHERE name = ?';
+                db.query(checkQuery, [producto.name], (err, result) => {
                     if (err) {
-                        console.error('Error al insertar el producto:', err);
+                        console.error('Error en la consulta:', err);
+                        return;
                     }
-                });
+                    if (result.length > 0) {
+                        console.log('El producto ya existe:', producto.name);
+                        return;
+                    }
+                    if(result.length == 0 ){
+                        const insertQuery = 'INSERT INTO productos (name, image_url, price) VALUES (?, ?, ?)';
+                        db.query(insertQuery, [producto.name, producto.image_url, producto.price], (err) => {
+                            if (err) {
+                                console.error('Error al insertar el producto:', err);
+                            }
+                        });
+                        console.log('Productos insertados en la tabla "productos".');
+                    }else{
+                        console.log('El producto ya existe:', producto.name);
+                    }
+                });         
             });
-            console.log('Productos insertados en la tabla "productos".');
+            
         });
     });
 });
