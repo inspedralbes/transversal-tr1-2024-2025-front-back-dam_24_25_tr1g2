@@ -131,6 +131,45 @@ app.put('/updateProducto/:id', (req, res) => {
     });
 });
 
+// Ruta para eliminar un producto
+app.delete('/deleteProducto/:id', (req, res) => {
+    const { id } = req.params; // Obtener el id del producto desde la URL
+
+    // Eliminar el producto de la base de datos
+    const deleteQuery = 'DELETE FROM productos WHERE id = ?';
+
+    db.query(deleteQuery, [id], (err, result) => {
+        if (err) {
+            console.error('Error al eliminar el producto en la base de datos:', err);
+            return res.status(500).send('Error al eliminar el producto en la base de datos');
+        }
+
+        // Comprobar si alguna fila fue eliminada
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Producto no encontrado en la base de datos');
+        }
+
+        // Si la eliminación en la base de datos fue exitosa, actualizamos el archivo JSON
+        db.query('SELECT * FROM productos', (err, productos) => {
+            if (err) {
+                console.error('Error al consultar productos para actualizar el archivo JSON:', err);
+                return res.status(500).send('Error al consultar productos');
+            }
+
+            // Guardamos los productos actualizados en el archivo JSON
+            fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
+                if (err) {
+                    console.error('Error al escribir en el archivo JSON:', err);
+                    return res.status(500).send('Error al escribir en el archivo JSON');
+                }
+
+                // Respondemos al cliente indicando que la eliminación fue exitosa
+                res.send('Producto eliminado con éxito y archivo JSON sincronizado');
+            });
+        });
+    });
+});
+
 // Obtener todos los productos
 app.get('/getProducto', (req, res) => {
     const query = 'SELECT * FROM productos'; 
