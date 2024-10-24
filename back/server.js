@@ -87,6 +87,50 @@ db.connect((err) => {
     });
 });
 
+// Ruta para actualizar un producto existente
+app.put('/updateProducto/:id', (req, res) => {
+    const { id } = req.params; // Obtener el id del producto desde la URL
+    const { producto, imagen, precio } = req.body; // Datos que vamos a actualizar
+
+    // Primero actualizamos en la base de datos
+    const updateQuery = `
+        UPDATE productos
+        SET producto = ?, imagen = ?, precio = ?
+        WHERE id = ?
+    `;
+
+    db.query(updateQuery, [producto, imagen, precio, id], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el producto en la base de datos:', err);
+            return res.status(500).send('Error al actualizar el producto en la base de datos');
+        }
+
+        // Comprobar si alguna fila fue actualizada
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Producto no encontrado en la base de datos');
+        }
+
+        // Si la actualización en la base de datos fue exitosa, actualizamos el archivo JSON
+        db.query('SELECT * FROM productos', (err, productos) => {
+            if (err) {
+                console.error('Error al consultar productos para actualizar el archivo JSON:', err);
+                return res.status(500).send('Error al consultar productos');
+            }
+
+            // Guardamos los productos actualizados en el archivo JSON
+            fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
+                if (err) {
+                    console.error('Error al escribir en el archivo JSON:', err);
+                    return res.status(500).send('Error al escribir en el archivo JSON');
+                }
+
+                // Respondemos al cliente indicando que la actualización fue exitosa
+                res.send('Producto actualizado con éxito y archivo JSON sincronizado');
+            });
+        });
+    });
+});
+
 // Obtener todos los productos
 app.get('/getProducto', (req, res) => {
     const query = 'SELECT * FROM productos'; 

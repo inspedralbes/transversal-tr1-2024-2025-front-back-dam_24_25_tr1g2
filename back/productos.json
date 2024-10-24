@@ -1,19 +1,22 @@
 {
-    "productos": [
-        {
-            "producto": "Blue Label",
-            "imagen": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQko9iqjKAmWUk6Nt59EY8CJ6mOz8DbUiAdAA&s",
-            "precio": 189.00
-        },
-        {
-            "producto": "Black Label",
-            "imagen": "https://example.com/image_black_label.jpg",
-            "precio": 39.99
-        },
-        {
-            "producto": "Red Label",
-            "imagen": "https://example.com/image_red_label.jpg",
-            "precio": 29.99
-        }
-    ]
+  "productos": [
+    {
+      "id": 1,
+      "producto": "Blue Label",
+      "imagen": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQko9iqjKAmWUk6Nt59EY8CJ6mOz8DbUiAdAA&s",
+      "precio": "189.00"
+    },
+    {
+      "id": 2,
+      "producto": "Black Labelzz",
+      "imagen": "https://example.com/image_black_label.jpg",
+      "precio": "39.97"
+    },
+    {
+      "id": 3,
+      "producto": "Red Label",
+      "imagen": "https://example.com/image_red_label.jpg",
+      "precio": "29.99"
+    }
+  ]
 }
