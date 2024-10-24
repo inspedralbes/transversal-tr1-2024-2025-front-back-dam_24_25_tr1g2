@@ -26,15 +26,16 @@
 
 
 <script>
-import productosData from './productos.json'
+import { getProducto } from '../src/Service/ComunicationManager'
 
+
+onMounted(async () => {
+  productos.value = await getProducto();
+});
 
 export default {
-  data() {
-    return {
-      productos: productosData.productos
-    }
-  }
+
+
 }
 </script>
 
