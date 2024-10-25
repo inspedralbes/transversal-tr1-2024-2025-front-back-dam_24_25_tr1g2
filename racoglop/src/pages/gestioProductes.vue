@@ -6,7 +6,7 @@
             <ul>
                <div v-for="producto in productos" :key="producto.id">
                     <p>{{ producto.producto }}</p>
-                    <p>{{ producto.imagen }}</p>
+                    <img>{{ producto.imagen }}</img>
                     <p>{{ producto.precio }}</p>
                 </div>
             </ul>
