@@ -5,6 +5,7 @@
 </template>
 
 <script setup>
+import { getProductos } from "../racoglop/service";
 export default {
     name: 'gestioProductes'
 }
