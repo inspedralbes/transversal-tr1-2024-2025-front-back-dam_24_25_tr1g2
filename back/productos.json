@@ -1,22 +1,46 @@
 {
   "productos": [
     {
-      "id": 1,
-      "producto": "Blue Label",
-      "imagen": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQko9iqjKAmWUk6Nt59EY8CJ6mOz8DbUiAdAA&s",
-      "precio": "189.00"
+      "id": 5,
+      "producto": "Chivas Regal 18",
+      "imagen": "https://example.com/image_chivas_regal_18.jpg",
+      "precio": "65.50"
     },
     {
-      "id": 2,
-      "producto": "Black Labelzz",
-      "imagen": "https://example.com/image_black_label.jpg",
-      "precio": "39.97"
+      "id": 14,
+      "producto": "Jack Daniel's Old No. 7",
+      "imagen": "https://example.com/image_jack_daniels.jpg",
+      "precio": "24.99"
     },
     {
-      "id": 3,
-      "producto": "Red Label",
-      "imagen": "https://example.com/image_red_label.jpg",
+      "id": 15,
+      "producto": "Macallan 12 Double Cask",
+      "imagen": "https://example.com/image_macallan_12.jpg",
+      "precio": "75.00"
+    },
+    {
+      "id": 16,
+      "producto": "Jameson Irish Whiskey",
+      "imagen": "https://example.com/image_jameson.jpg",
+      "precio": "19.99"
+    },
+    {
+      "id": 17,
+      "producto": "Bulleit Bourbon",
+      "imagen": "https://example.com/image_bulleit.jpg",
       "precio": "29.99"
+    },
+    {
+      "id": 19,
+      "producto": "Glenfiddich 15 Year",
+      "imagen": "https://example.com/image_glenfiddich_15.jpg",
+      "precio": "60.00"
+    },
+    {
+      "id": 22,
+      "producto": "puta",
+      "imagen": "shdphasphfdop",
+      "precio": "50.00"
     }
   ]
 }

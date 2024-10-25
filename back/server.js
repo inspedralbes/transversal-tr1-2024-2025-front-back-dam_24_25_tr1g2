@@ -87,6 +87,40 @@ db.connect((err) => {
     });
 });
 
+
+app.post('/addProducto', (req, res) => {
+    const { producto, imagen, precio } = req.body;
+
+    if (!producto || !imagen || !precio) {
+        return res.status(400).send('Faltan datos para agregar el producto');
+    }
+
+    const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
+
+    db.query(insertQuery, [producto, imagen, precio], (err, result) => {
+        if (err) {
+            console.error('Error al insertar el producto en la base de datos:', err);
+            return res.status(500).send('Error al insertar el producto en la base de datos');
+        }
+
+        db.query('SELECT * FROM productos', (err, productos) => {
+            if (err) {
+                console.error('Error al consultar productos para actualizar el archivo JSON:', err);
+                return res.status(500).send('Error al consultar productos');
+            }
+
+            fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
+                if (err) {
+                    console.error('Error al escribir en el archivo JSON:', err);
+                    return res.status(500).send('Error al escribir en el archivo JSON');
+                }
+                res.status(201).json(result.insertId);
+            });
+        });
+    });
+});
+
+
 // Ruta para actualizar un producto existente
 app.put('/updateProducto/:id', (req, res) => {
     const { id } = req.params; // Obtener el id del producto desde la URL
