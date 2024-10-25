@@ -5,8 +5,13 @@
 </template>
 
 <script setup>
-import { getProductos } from "../racoglop/service";
-export default {
-    name: 'gestioProductes'
-}
+import { getProductos } from "../service/communicationManager";
+
+const productos = ref([]);
+
+onMounted(async () => {
+    productos.value = await getProductos();
+    console.log(productos.value);
+})
+
 </script>
