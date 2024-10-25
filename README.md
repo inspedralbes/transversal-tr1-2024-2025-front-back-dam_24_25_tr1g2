@@ -3,10 +3,10 @@
 
 # GRUP
 
-Hasham Hussain Rafi
-Sara Martínez Bautista 
-Xavier Mateu Martínez Velasco 
-David Muñoz González
-Marc Rojano González
+#Hasham Hussain Rafi
+#Sara Martínez Bautista 
+#Xavier Mateu Martínez Velasco 
+#David Muñoz González
+#Marc Rojano González
 
   
