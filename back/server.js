@@ -183,6 +183,34 @@ app.get('/getProducto', (req, res) => {
     });
 });
 
+// Ruta para registrar una compra
+app.post('/registrarCompra', (req, res) => {
+    const { id, id_usuario, detalles, total, fecha_pedido } = req.body;
+
+    // Validar que se recibieron todos los datos necesarios
+    if (!id || !id_usuario || !detalles || !total || !fecha_pedido) {
+        return res.status(400).send('Faltan datos necesarios para registrar la compra');
+    }
+
+    // Insertar la compra en la tabla "pedidos"
+    const insertPurchaseQuery = `
+          INSERT INTO pedidos (id, id_usuario, detalles, total, fecha_pedido)
+          VALUES (?, ?, ?, ?, ?)
+    `;
+
+    db.query(insertPurchaseQuery, [id, id_usuario, detalles, total, fecha_pedido], (err, result) => {
+        if (err) {
+            console.error('Error al registrar la compra en la base de datos:', err);
+            return res.status(500).send('Error al registrar la compra en la base de datos');
+        }
+
+        // Responder al cliente indicando que la compra se registró correctamente
+        res.send('Compra registrada con éxito');
+    });
+});
+
+
+
 
 app.listen(port, () => {
     // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
