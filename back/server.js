@@ -3,12 +3,31 @@ const mysql = require('mysql2');
 const fs = require('fs');
 const cors = require('cors');
 const app = express();
+const multer = require('multer');
+const path = require('path');
 const port = 3001;
 // const port = 23457;
 
 // Middleware para permitir el parsing de JSON en los requests
+app.use(express.json({ limit: '200mb' }));
+
 app.use(express.json());
 app.use(cors());
+
+app.use('/imagen', express.static(path.join(__dirname, 'public/imagen')));
+
+const storage = multer.diskStorage({
+    destination:  (req, file, cb) =>{
+        cb(null, 'public/imagen');
+    },
+    filename: (req, file, cb) =>{
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        cb(null, uniqueSuffix + extension);
+    }
+});
+
+const upload = multer({ storage: storage });
 
 const db = mysql.createConnection({
     host: 'localhost',
@@ -88,8 +107,9 @@ db.connect((err) => {
 });
 
 
-app.post('/addProducto', (req, res) => {
-    const { producto, imagen, precio } = req.body;
+app.post('/addProducto', upload.single('imagen'), (req, res) => {
+    const { producto, precio } = req.body;
+    const imagen = req.file ? req.file.filename : null;
 
     if (!producto || !imagen || !precio) {
         return res.status(400).send('Faltan datos para agregar el producto');
@@ -122,9 +142,10 @@ app.post('/addProducto', (req, res) => {
 
 
 // Ruta para actualizar un producto existente
-app.put('/updateProducto/:id', (req, res) => {
+app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
     const { id } = req.params; // Obtener el id del producto desde la URL
-    const { producto, imagen, precio } = req.body; // Datos que vamos a actualizar
+    const { producto, precio } = req.body; // Datos que vamos a actualizar
+    const imagen = req.file ? req.file.filename : req.body.imagen;
 
     // Primero actualizamos en la base de datos
     const updateQuery = `
@@ -144,21 +165,18 @@ app.put('/updateProducto/:id', (req, res) => {
             return res.status(404).send('Producto no encontrado en la base de datos');
         }
 
-        // Si la actualización en la base de datos fue exitosa, actualizamos el archivo JSON
         db.query('SELECT * FROM productos', (err, productos) => {
             if (err) {
                 console.error('Error al consultar productos para actualizar el archivo JSON:', err);
                 return res.status(500).send('Error al consultar productos');
             }
 
-            // Guardamos los productos actualizados en el archivo JSON
             fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
                 if (err) {
                     console.error('Error al escribir en el archivo JSON:', err);
                     return res.status(500).send('Error al escribir en el archivo JSON');
                 }
 
-                // Respondemos al cliente indicando que la actualización fue exitosa
                 res.send('Producto actualizado con éxito y archivo JSON sincronizado');
             });
         });

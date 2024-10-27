@@ -35,8 +35,7 @@ export const updateProducto = async (id, updatedProducto) => {
     try {
         const response = await fetch(`${ruta}/updateProducto/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedProducto),
+            body: updatedProducto,
         });
         if (!response.ok) {
             throw new Error('Error al actualizar el producto');

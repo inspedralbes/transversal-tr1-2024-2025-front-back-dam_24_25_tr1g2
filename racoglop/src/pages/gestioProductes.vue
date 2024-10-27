@@ -12,7 +12,7 @@
                             <v-card class="product-card">
                                 <v-card-title>{{ producto.producto }}</v-card-title>
                                 <v-card-subtitle>€{{ producto.precio }}</v-card-subtitle>
-                                <v-img :src="producto.imagen" max-width="200" class="mx-auto"></v-img>
+                                <v-img :src="`http://localhost:3001/imagen/${producto.imagen}`" max-width="200" class="mx-auto"></v-img>
                                 <v-card-actions>
                                     <v-btn icon color="blue" @click="openEditDialog(producto)">
                                         <v-icon>mdi-pencil</v-icon>
@@ -27,7 +27,6 @@
                 </v-col>
             </v-row>
 
-            
             <v-dialog v-model="dialog" max-width="500px">
                 <v-card>
                     <v-card-title>
@@ -35,8 +34,8 @@
                     </v-card-title>
                     <v-card-text>
                         <v-text-field label="Nom del Producte" v-model="form.producto" required></v-text-field>
-                        <v-text-field label="URL Imatge" v-model="form.imagen" required></v-text-field>
                         <v-text-field label="Preu" v-model="form.precio" type="number" required></v-text-field>
+                        <input type="file" @change="handleFileUpload" />
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
@@ -57,6 +56,7 @@ const productos = ref([]);
 const dialog = ref(false);
 const isEditing = ref(false);
 const form = ref({ id: null, producto: '', imagen: '', precio: 0 });
+const selectedFile = ref(null);
 
 onMounted(async () => {
     await fetchProductos();
@@ -88,14 +88,28 @@ const openEditDialog = (producto) => {
 const closeDialog = () => {
     dialog.value = false;
     form.value = { id: null, producto: '', imagen: '', precio: 0 };
+    selectedFile.value = null;
+};
+
+const handleFileUpload = (event) => {
+    selectedFile.value = event.target.files[0];
 };
 
 const submitForm = async () => {
     try {
-        if (isEditing.value) {
-            await updateProducto(form.value.id, form.value);
+        const formData = new FormData();
+        formData.append('producto', form.value.producto);
+        formData.append('precio', form.value.precio);
+        if (selectedFile.value) {
+            formData.append('imagen', selectedFile.value);
         } else {
-            await addProducto(form.value);
+            formData.append('imagen', form.value.imagen);
+        }
+
+        if (isEditing.value) {
+            await updateProducto(form.value.id, formData);
+        } else {
+            await addProducto(formData);
         }
         closeDialog();
     } catch (error) {
@@ -115,3 +129,4 @@ const removeProducto = async (id) => {
     await fetchProductos();
 };
 </script>
+

@@ -1,43 +1,43 @@
 {
   "productos": [
     {
-      "id": 5,
-      "producto": "Chivas Regal 18",
-      "imagen": "https://example.com/image_chivas_regal_18.jpg",
-      "precio": "65.50"
+      "id": 1,
+      "producto": "",
+      "imagen": "",
+      "precio": "0.00"
     },
     {
-      "id": 14,
+      "id": 2,
       "producto": "Jack Daniel's Old No. 7",
-      "imagen": "https://example.com/image_jack_daniels.jpg",
+      "imagen": "1730023558787-534215442.jpg",
       "precio": "24.99"
     },
     {
-      "id": 15,
+      "id": 3,
       "producto": "Macallan 12 Double Cask",
       "imagen": "https://example.com/image_macallan_12.jpg",
       "precio": "75.00"
     },
     {
-      "id": 16,
+      "id": 4,
       "producto": "Jameson Irish Whiskey",
       "imagen": "https://example.com/image_jameson.jpg",
       "precio": "19.99"
     },
     {
-      "id": 17,
+      "id": 5,
       "producto": "Bulleit Bourbon",
       "imagen": "https://example.com/image_bulleit.jpg",
       "precio": "29.99"
     },
     {
-      "id": 19,
+      "id": 6,
       "producto": "Glenfiddich 15 Year",
       "imagen": "https://example.com/image_glenfiddich_15.jpg",
       "precio": "60.00"
     },
     {
-      "id": 22,
+      "id": 7,
       "producto": "puta",
       "imagen": "shdphasphfdop",
       "precio": "50.00"
