@@ -185,20 +185,20 @@ app.get('/getProducto', (req, res) => {
 
 // Ruta para registrar una compra
 app.post('/registrarCompra', (req, res) => {
-    const { id, id_usuario, detalles, total, fecha_pedido } = req.body;
+    const { id, usuario_id, detalles, total, fecha_pedido } = req.body;
 
     // Validar que se recibieron todos los datos necesarios
-    if (!id || !id_usuario || !detalles || !total || !fecha_pedido) {
+    if (!id || !usuario_id || !detalles || !total || !fecha_pedido) {
         return res.status(400).send('Faltan datos necesarios para registrar la compra');
     }
 
     // Insertar la compra en la tabla "pedidos"
     const insertPurchaseQuery = `
-          INSERT INTO pedidos (id, id_usuario, detalles, total, fecha_pedido)
+          INSERT INTO pedidos (id, usuario_id, detalles, total, fecha_pedido)
           VALUES (?, ?, ?, ?, ?)
     `;
 
-    db.query(insertPurchaseQuery, [id, id_usuario, detalles, total, fecha_pedido], (err, result) => {
+    db.query(insertPurchaseQuery, [id, usuario_id, detalles, total, fecha_pedido], (err, result) => {
         if (err) {
             console.error('Error al registrar la compra en la base de datos:', err);
             return res.status(500).send('Error al registrar la compra en la base de datos');
