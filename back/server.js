@@ -52,60 +52,63 @@ db.connect((err) => {
     }
     console.log('Conexión exitosa a la base de datos.');
 
-    // Crear tabla si no existe
+    // Crear tabla productos si no existe
     const createTableQuery = `
         CREATE TABLE IF NOT EXISTS productos (
             id INT AUTO_INCREMENT PRIMARY KEY,
             producto VARCHAR(255) NOT NULL,
             imagen VARCHAR(255) NOT NULL,
             precio DECIMAL(10, 2) NOT NULL
-        )`;
+        )
+    `;
 
     db.query(createTableQuery, (err) => {
         if (err) {
-            console.error('Error al crear la tabla:', err);
+            console.error('Error al crear la tabla productos:', err);
             return;
         }
         console.log('Tabla "productos" creada o ya existe.');
 
-        // Leer el archivo JSON
-        fs.readFile('productos.json', 'utf8', (err, data) => {
+        // Crear tabla pedidos si no existe
+        const createPedidosTableQuery = `
+            CREATE TABLE IF NOT EXISTS pedidos (
+                id INT PRIMARY KEY,
+                usuario_id INT,
+                detalles TEXT,
+                total DECIMAL(10, 2),
+                fecha_pedido DATE
+            )
+        `;
+
+        db.query(createPedidosTableQuery, (err) => {
             if (err) {
-                console.error('Error al leer el archivo JSON:', err);
+                console.error('Error al crear la tabla pedidos:', err);
                 return;
             }
-            const productos = JSON.parse(data).productos;
+            console.log('Tabla "pedidos" creada o ya existe.');
 
-            // Insertar los productos en la base de datos
-            productos.forEach(producto => {
-                const checkQuery = 'SELECT * FROM productos WHERE producto = ?';
-                db.query(checkQuery, [producto.producto], (err, result) => {
-                    if (err) {
-                        console.error('Error en la consulta:', err);
-                        return;
-                    }
-                    if (result.length > 0) {
-                        console.log('El producto ya existe:', producto.producto);
-                        return;
-                    }
-                    if(result.length == 0 ){
-                        const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
-                        db.query(insertQuery, [producto.producto, producto.imagen, producto.precio], (err) => {
-                            if (err) {
-                                console.error('Error al insertar el producto:', err);
-                            }
-                        });
-                        console.log('Productos insertados en la tabla "productos".');
-                    }else{
-                        console.log('El producto ya existe:', producto.producto);
-                    }
-                });         
+            // Crear tabla intermedia pedido_productos
+            const createPedidoProductosTableQuery = `
+                CREATE TABLE IF NOT EXISTS pedido_productos (
+                    pedido_id INT,
+                    producto_id INT,
+                    cantidad INT NOT NULL DEFAULT 1,
+                    PRIMARY KEY (pedido_id, producto_id),
+                    FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
+                    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+                )
+            `;
+
+            db.query(createPedidoProductosTableQuery, (err) => {
+                if (err) {
+                    console.error('Error al crear la tabla pedido_productos:', err);
+                    return;
+                }
+                console.log('Tabla "pedido_productos" creada o ya existe.');
             });
-            
         });
     });
 });
-
 
 app.post('/addProducto', upload.single('imagen'), (req, res) => {
     const { producto, precio } = req.body;
@@ -140,14 +143,11 @@ app.post('/addProducto', upload.single('imagen'), (req, res) => {
     });
 });
 
-
-// Ruta para actualizar un producto existente
 app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
     const { id } = req.params; // Obtener el id del producto desde la URL
     const { producto, precio } = req.body; // Datos que vamos a actualizar
     const imagen = req.file ? req.file.filename : req.body.imagen;
 
-    // Primero actualizamos en la base de datos
     const updateQuery = `
         UPDATE productos
         SET producto = ?, imagen = ?, precio = ?
@@ -160,7 +160,6 @@ app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
             return res.status(500).send('Error al actualizar el producto en la base de datos');
         }
 
-        // Comprobar si alguna fila fue actualizada
         if (result.affectedRows === 0) {
             return res.status(404).send('Producto no encontrado en la base de datos');
         }
@@ -183,11 +182,9 @@ app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
     });
 });
 
-// Ruta para eliminar un producto
 app.delete('/deleteProducto/:id', (req, res) => {
-    const { id } = req.params; // Obtener el id del producto desde la URL
+    const { id } = req.params;
 
-    // Eliminar el producto de la base de datos
     const deleteQuery = 'DELETE FROM productos WHERE id = ?';
 
     db.query(deleteQuery, [id], (err, result) => {
@@ -196,33 +193,28 @@ app.delete('/deleteProducto/:id', (req, res) => {
             return res.status(500).send('Error al eliminar el producto en la base de datos');
         }
 
-        // Comprobar si alguna fila fue eliminada
         if (result.affectedRows === 0) {
             return res.status(404).send('Producto no encontrado en la base de datos');
         }
 
-        // Si la eliminación en la base de datos fue exitosa, actualizamos el archivo JSON
         db.query('SELECT * FROM productos', (err, productos) => {
             if (err) {
                 console.error('Error al consultar productos para actualizar el archivo JSON:', err);
                 return res.status(500).send('Error al consultar productos');
             }
 
-            // Guardamos los productos actualizados en el archivo JSON
             fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
                 if (err) {
                     console.error('Error al escribir en el archivo JSON:', err);
                     return res.status(500).send('Error al escribir en el archivo JSON');
                 }
 
-                // Respondemos al cliente indicando que la eliminación fue exitosa
                 res.send('Producto eliminado con éxito y archivo JSON sincronizado');
             });
         });
     });
 });
 
-// Obtener todos los productos
 app.get('/getProducto', (req, res) => {
     const query = 'SELECT * FROM productos'; 
     
@@ -235,16 +227,13 @@ app.get('/getProducto', (req, res) => {
     });
 });
 
-// Ruta para registrar una compra
 app.post('/registrarCompra', (req, res) => {
     const { id, usuario_id, detalles, total, fecha_pedido } = req.body;
 
-    // Validar que se recibieron todos los datos necesarios
     if (!id || !usuario_id || !detalles || !total || !fecha_pedido) {
         return res.status(400).send('Faltan datos necesarios para registrar la compra');
     }
 
-    // Insertar la compra en la tabla "pedidos"
     const insertPurchaseQuery = `
           INSERT INTO pedidos (id, usuario_id, detalles, total, fecha_pedido)
           VALUES (?, ?, ?, ?, ?)
@@ -256,11 +245,29 @@ app.post('/registrarCompra', (req, res) => {
             return res.status(500).send('Error al registrar la compra en la base de datos');
         }
 
-        // Responder al cliente indicando que la compra se registró correctamente
         res.send('Compra registrada con éxito');
     });
 });
 
+// Ruta para obtener todas las compras registradas
+app.get('/registrarCompra', (req, res) => {
+    const query = `
+        SELECT pedidos.*, 
+               GROUP_CONCAT(producto.producto, ' (Cantidad: ', pedido_productos.cantidad, ')') AS productos_comprados
+        FROM pedidos
+        LEFT JOIN pedido_productos ON pedidos.id = pedido_productos.pedido_id
+        LEFT JOIN productos AS producto ON pedido_productos.producto_id = producto.id
+        GROUP BY pedidos.id
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error al obtener las compras:', err);
+            return res.status(500).send('Error al obtener las compras');
+        }
+        res.json(results);
+    });
+});
 
 
 
