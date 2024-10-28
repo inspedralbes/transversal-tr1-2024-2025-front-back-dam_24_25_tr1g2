@@ -70,7 +70,45 @@ db.connect((err) => {
         console.log('Tabla "productos" creada o ya existe.');
 
         // Crear tabla pedidos si no existe
-        const createPedidosTableQuery = `
+        fs.readFile('productos.json', 'utf8', (err, data) => {
+            if (err) {
+                console.error('Error al leer el archivo JSON:', err);
+                return;
+            }
+            const productos = JSON.parse(data).productos;
+
+            // Insertar los productos en la base de datos
+            productos.forEach(producto => {
+                const checkQuery = 'SELECT * FROM productos WHERE producto = ?';
+                db.query(checkQuery, [producto.producto], (err, result) => {
+                    if (err) {
+                        console.error('Error en la consulta:', err);
+                        return;
+                    }
+                    if (result.length > 0) {
+                        console.log('El producto ya existe:', producto.producto);
+                        return;
+                    }
+                    if(result.length == 0 ){
+                        const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
+                        db.query(insertQuery, [producto.producto, producto.imagen, producto.precio], (err) => {
+                            if (err) {
+                                console.error('Error al insertar el producto:', err);
+                            }
+                        });
+                        console.log('Productos insertados en la tabla "productos".');
+                    }else{
+                        console.log('El producto ya existe:', producto.producto);
+                    }
+                });         
+            });
+            
+        });
+    });
+});
+
+
+const createPedidosTableQuery = `
             CREATE TABLE IF NOT EXISTS pedidos (
                 id INT PRIMARY KEY,
                 usuario_id INT,
@@ -107,8 +145,6 @@ db.connect((err) => {
                 console.log('Tabla "pedido_productos" creada o ya existe.');
             });
         });
-    });
-});
 
 app.post('/addProducto', upload.single('imagen'), (req, res) => {
     const { producto, precio } = req.body;
