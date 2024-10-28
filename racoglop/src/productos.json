@@ -1,0 +1,42 @@
+{
+    "productos": [
+      {
+        "id": 1,
+        "nombre": "Johnnie Walker Blue Label",
+        "volumen": "70 cl",
+        "tipo": "Whisky",
+        "precio": null,
+        "descripcion": "Un whisky escocés de lujo con un sabor suave y complejo.",
+        "imagen": "https://www.vinatis.es/34635-detail_default/johnnie-walker-blue-label-con-estuche.png"
+      },
+      {
+        "id": 2,
+        "nombre": "Ginebra Hendrick's",
+        "volumen": "0,70 l",
+        "tipo": "Ginebra",
+        "precio": null,
+        "descripcion": "Una ginebra premium infusionada con pepino y pétalos de rosa.",
+        "imagen": "https://static.yoursurprise.com/galleryimage/c5/c5f5fa0f705931c2e9083a140d928e75.png?width=900&crop=1:1"
+      },
+      {
+        "id": 3,
+        "nombre": "Heineken cerveza pack 6",
+        "volumen": "25 cl (u)",
+        "tipo": "Cerveza",
+        "cantidad": 6,
+        "precio": null,
+        "descripcion": "Cerveza lager internacional con un sabor refrescante y ligeramente amargo.",
+        "imagen": "https://www.calfruitos.com/fotos/pr_7216_20220104094456.png"
+      },
+      {
+        "id": 4,
+        "nombre": "Mezan X.O. Jamaica Rum",
+        "volumen": "70 cl",
+        "tipo": "Ron",
+        "precio": null,
+        "descripcion": "Ron añejado en Jamaica con un carácter aromático y afrutado.",
+        "imagen": "https://www.vinatis.es/90537-detail_default/mezan-ron-jamaica-barrique-xo-etui.png"
+      }
+    ]
+  }
+  
