@@ -28,39 +28,38 @@ export const getProductos = async () => {
 };
 
 // Funciones para agregar, actualizar y eliminar productos se mantienen igual
-export const addProducto = async (producto) => {
+export const addProducto = async (formData) => {
     try {
         const response = await fetch(`${ruta}/addProducto`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(producto),
+            body: formData, // Enviar formData en lugar de JSON
         });
         if (!response.ok) {
             throw new Error('Error al agregar el producto');
         }
-        return await response.json();
+        return await response.json(); // Retornar la respuesta en JSON
     } catch (error) {
         console.error('Error adding product:', error);
         throw error;
     }
 };
 
-export const updateProducto = async (id, updatedProducto) => {
+export const updateProducto = async (id, formData) => {
     try {
         const response = await fetch(`${ruta}/updateProducto/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedProducto),  // Asegúrate de convertir a JSON
+            body: formData, // Enviar formData en lugar de JSON
         });
         if (!response.ok) {
             throw new Error('Error al actualizar el producto');
         }
-        return await response.json();
+        return await response.json(); // Retornar la respuesta en JSON
     } catch (error) {
         console.error('Error updating product:', error);
         throw error;
     }
 };
+
 
 export const deleteProducto = async (id) => {
     try {
