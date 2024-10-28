@@ -113,6 +113,7 @@ const createPedidosTableQuery = `
                 id INT PRIMARY KEY,
                 usuario_id INT,
                 detalles TEXT,
+                estado VARCHAR(255) DEFAULT 'Pendiente',
                 total DECIMAL(10, 2),
                 fecha_pedido DATE
             )
@@ -264,18 +265,18 @@ app.get('/getProducto', (req, res) => {
 });
 
 app.post('/registrarCompra', (req, res) => {
-    const { id, usuario_id, detalles, total, fecha_pedido } = req.body;
+    const { id, usuario_id, estado, detalles, total, fecha_pedido } = req.body;
 
-    if (!id || !usuario_id || !detalles || !total || !fecha_pedido) {
+    if (!id || !usuario_id ||!estado ||!detalles || !total || !fecha_pedido) {
         return res.status(400).send('Faltan datos necesarios para registrar la compra');
     }
 
     const insertPurchaseQuery = `
-          INSERT INTO pedidos (id, usuario_id, detalles, total, fecha_pedido)
+          INSERT INTO pedidos (id, usuario_id, estado, detalles, total, fecha_pedido)
           VALUES (?, ?, ?, ?, ?)
     `;
 
-    db.query(insertPurchaseQuery, [id, usuario_id, detalles, total, fecha_pedido], (err, result) => {
+    db.query(insertPurchaseQuery, [id, usuario_id, estado,detalles, total, fecha_pedido], (err, result) => {
         if (err) {
             console.error('Error al registrar la compra en la base de datos:', err);
             return res.status(500).send('Error al registrar la compra en la base de datos');
