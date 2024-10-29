@@ -1,5 +1,6 @@
 <template>
     <div>
+        <Header />
         <v-container>
             <v-row justify="center">
                 <v-col cols="12" sm="8">
@@ -51,6 +52,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { getProductos, addProducto, updateProducto, deleteProducto } from "../service/communicationManager";
+import Header from '../components/header.vue'; 
 
 const productos = ref([]);
 const dialog = ref(false);
@@ -106,11 +108,15 @@ const submitForm = async () => {
             formData.append('imagen', form.value.imagen);
         }
 
+        let response;
         if (isEditing.value) {
-            await updateProducto(form.value.id, formData);
+            response = await updateProducto(form.value.id, formData);
         } else {
-            await addProducto(formData);
+            response = await addProducto(formData);
         }
+
+        // Imprimir la respuesta para depuración
+        console.log('Response from server:', response);
         closeDialog();
     } catch (error) {
         console.error("Error submitting the form:", error);
