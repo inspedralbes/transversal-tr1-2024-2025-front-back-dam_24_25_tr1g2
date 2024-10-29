@@ -54,19 +54,15 @@ db.connect((err) => {
 
     // Crear tabla productos si no existe
     const createProductosTableQuery = `
-    // Crear tabla productos si no existe
-    const createTableQuery = `
         CREATE TABLE IF NOT EXISTS productos (
             id INT AUTO_INCREMENT PRIMARY KEY,
             producto VARCHAR(255) NOT NULL,
             imagen VARCHAR(255) NOT NULL,
             precio DECIMAL(10, 2) NOT NULL
-        )
-    `;
+        )`;
 
     db.query(createProductosTableQuery, (err) => {
         if (err) {
-            console.error('Error al crear la tabla productos:', err);
             console.error('Error al crear la tabla productos:', err);
             return;
         }
@@ -122,84 +118,6 @@ db.connect((err) => {
     });
 });
 
-const createPedidosTableQuery = `
-            CREATE TABLE IF NOT EXISTS pedidos (
-                id INT PRIMARY KEY,
-                usuario_id INT,
-                detalles TEXT,
-                estado VARCHAR(255) DEFAULT 'Pendiente',
-                total DECIMAL(10, 2),
-                fecha_pedido DATE
-            )
-        `;
-
-        db.query(createPedidosTableQuery, (err) => {
-            if (err) {
-                console.error('Error al crear la tabla pedidos:', err);
-                return;
-            }
-            console.log('Tabla "pedidos" creada o ya existe.');
-
-            // Crear tabla intermedia pedido_productos
-            const createPedidoProductosTableQuery = `
-                CREATE TABLE IF NOT EXISTS pedido_productos (
-                    pedido_id INT,
-                    producto_id INT,
-                    cantidad INT NOT NULL DEFAULT 1,
-                    PRIMARY KEY (pedido_id, producto_id),
-                    FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
-                    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
-                )
-            `;
-
-            db.query(createPedidoProductosTableQuery, (err) => {
-                if (err) {
-                    console.error('Error al crear la tabla pedido_productos:', err);
-                    return;
-                }
-                console.log('Tabla "pedido_productos" creada o ya existe.');
-            });
-        });
-
-const createPedidosTableQuery = `
-            CREATE TABLE IF NOT EXISTS pedidos (
-                id INT PRIMARY KEY,
-                usuario_id INT,
-                detalles TEXT,
-                estado VARCHAR(255) DEFAULT 'Pendiente',
-                total DECIMAL(10, 2),
-                fecha_pedido DATE
-            )
-        `;
-
-        db.query(createPedidosTableQuery, (err) => {
-            if (err) {
-                console.error('Error al crear la tabla pedidos:', err);
-                return;
-            }
-            console.log('Tabla "pedidos" creada o ya existe.');
-
-            // Crear tabla intermedia pedido_productos
-            const createPedidoProductosTableQuery = `
-                CREATE TABLE IF NOT EXISTS pedido_productos (
-                    pedido_id INT,
-                    producto_id INT,
-                    cantidad INT NOT NULL DEFAULT 1,
-                    PRIMARY KEY (pedido_id, producto_id),
-                    FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
-                    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
-                )
-            `;
-
-            db.query(createPedidoProductosTableQuery, (err) => {
-                if (err) {
-                    console.error('Error al crear la tabla pedido_productos:', err);
-                    return;
-                }
-                console.log('Tabla "pedido_productos" creada o ya existe.');
-            });
-        });
-
 app.post('/addProducto', upload.single('imagen'), (req, res) => {
     const { producto, precio } = req.body;
     const imagen = req.file ? req.file.filename : null;
@@ -234,7 +152,6 @@ app.post('/addProducto', upload.single('imagen'), (req, res) => {
 });
 
 // Ruta para actualizar un producto existente
-
 app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
     const { id } = req.params; // Obtener el id del producto desde la URL
     const { producto, precio } = req.body; // Datos que vamos a actualizar
@@ -274,8 +191,9 @@ app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
     });
 });
 
+// Ruta para eliminar un producto
 app.delete('/deleteProducto/:id', (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // Obtener el id del producto desde la URL
 
     const deleteQuery = 'DELETE FROM productos WHERE id = ?';
 
@@ -307,6 +225,7 @@ app.delete('/deleteProducto/:id', (req, res) => {
     });
 });
 
+// Obtener todos los productos
 app.get('/getProducto', (req, res) => {
     const query = 'SELECT * FROM productos'; 
     
@@ -319,22 +238,19 @@ app.get('/getProducto', (req, res) => {
     });
 });
 
+// Ruta para registrar una compra
 app.post('/registrarCompra', (req, res) => {
-    const { id, usuario_id, estado, detalles, total, fecha_pedido } = req.body;
     const { usuario_id, detalles, total, fecha } = req.body[0];  // Extrayendo el primer pedido del array recibido
 
-    if (!id || !usuario_id ||!estado ||!detalles || !total || !fecha_pedido) {
+    if (!usuario_id || !detalles || !total || !fecha) {
         return res.status(400).send('Faltan datos necesarios para registrar la compra');
     }
 
     const insertPurchaseQuery = `
-          INSERT INTO pedidos (id, usuario_id, estado, detalles, total, fecha_pedido)
-          VALUES (?, ?, ?, ?, ?)
           INSERT INTO pedidos (usuario_id, detalles, total, fecha_pedido)
           VALUES (?, ?, ?, ?)
     `;
 
-    db.query(insertPurchaseQuery, [id, usuario_id, estado,detalles, total, fecha_pedido], (err, result) => {
     db.query(insertPurchaseQuery, [usuario_id, detalles, total, fecha], (err, result) => {
         if (err) {
             console.error('Error al registrar la compra en la base de datos:', err);
@@ -344,27 +260,6 @@ app.post('/registrarCompra', (req, res) => {
         res.send('Compra registrada con éxito');
     });
 });
-
-// Ruta para obtener todas las compras registradas
-app.get('/registrarCompra', (req, res) => {
-    const query = `
-        SELECT pedidos.*, 
-               GROUP_CONCAT(producto.producto, ' (Cantidad: ', pedido_productos.cantidad, ')') AS productos_comprados
-        FROM pedidos
-        LEFT JOIN pedido_productos ON pedidos.id = pedido_productos.pedido_id
-        LEFT JOIN productos AS producto ON pedido_productos.producto_id = producto.id
-        GROUP BY pedidos.id
-    `;
-
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error('Error al obtener las compras:', err);
-            return res.status(500).send('Error al obtener las compras');
-        }
-        res.json(results);
-    });
-});
-
 
 //Conectar al server
 
