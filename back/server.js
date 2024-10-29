@@ -273,10 +273,10 @@ app.post('/registrarCompra', (req, res) => {
 
     const insertPurchaseQuery = `
           INSERT INTO pedidos (id, usuario_id, estado, detalles, total, fecha_pedido)
-          VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(insertPurchaseQuery, [id, usuario_id, estado,detalles, total, fecha_pedido], (err, result) => {
+    db.query(insertPurchaseQuery, [id, usuario_id, estado, detalles, total, fecha_pedido], (err, result) => {
         if (err) {
             console.error('Error al registrar la compra en la base de datos:', err);
             return res.status(500).send('Error al registrar la compra en la base de datos');
@@ -303,6 +303,25 @@ app.get('/registrarCompra', (req, res) => {
             return res.status(500).send('Error al obtener las compras');
         }
         res.json(results);
+    });
+});
+
+app.delete('/deleteCompra/:id', (req, res) => {
+    const { id } = req.params;
+
+    const deleteQuery = 'DELETE FROM pedidos WHERE id = ?';
+
+    db.query(deleteQuery, [id], (err, result) => {
+        if (err) {
+            console.error('Error al eliminar la compra en la base de datos:', err);
+            return res.status(500).send('Error al eliminar la compra en la base de datos');
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Compra no encontrada en la base de datos');
+        }
+
+        res.send('Compra eliminada con éxito');
     });
 });
 
