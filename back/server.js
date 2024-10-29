@@ -17,10 +17,10 @@ app.use(cors());
 app.use('/imagen', express.static(path.join(__dirname, 'public/imagen')));
 
 const storage = multer.diskStorage({
-    destination:  (req, file, cb) =>{
+    destination: (req, file, cb) => {
         cb(null, 'public/imagen');
     },
-    filename: (req, file, cb) =>{
+    filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const extension = path.extname(file.originalname);
         cb(null, uniqueSuffix + extension);
@@ -34,7 +34,7 @@ const db = mysql.createConnection({
     user: 'root',
     password: '',
     database: 'tr1_g2-alcohol',
-    connectTimeout: 10000 
+    connectTimeout: 10000
 });
 
 // const db = mysql.createConnection({
@@ -52,8 +52,8 @@ db.connect((err) => {
     }
     console.log('Conexión exitosa a la base de datos.');
 
-    // Crear tabla si no existe
-    const createTableQuery = `
+    // Crear tabla productos si no existe
+    const createProductosTableQuery = `
         CREATE TABLE IF NOT EXISTS productos (
             id INT AUTO_INCREMENT PRIMARY KEY,
             producto VARCHAR(255) NOT NULL,
@@ -61,14 +61,14 @@ db.connect((err) => {
             precio DECIMAL(10, 2) NOT NULL
         )`;
 
-    db.query(createTableQuery, (err) => {
+    db.query(createProductosTableQuery, (err) => {
         if (err) {
-            console.error('Error al crear la tabla:', err);
+            console.error('Error al crear la tabla productos:', err);
             return;
         }
         console.log('Tabla "productos" creada o ya existe.');
 
-        // Leer el archivo JSON
+        // Leer el archivo JSON y agregar productos si es necesario
         fs.readFile('productos.json', 'utf8', (err, data) => {
             if (err) {
                 console.error('Error al leer el archivo JSON:', err);
@@ -76,7 +76,6 @@ db.connect((err) => {
             }
             const productos = JSON.parse(data).productos;
 
-            // Insertar los productos en la base de datos
             productos.forEach(producto => {
                 const checkQuery = 'SELECT * FROM productos WHERE producto = ?';
                 db.query(checkQuery, [producto.producto], (err, result) => {
@@ -84,11 +83,7 @@ db.connect((err) => {
                         console.error('Error en la consulta:', err);
                         return;
                     }
-                    if (result.length > 0) {
-                        console.log('El producto ya existe:', producto.producto);
-                        return;
-                    }
-                    if(result.length == 0 ){
+                    if (result.length === 0) {
                         const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
                         db.query(insertQuery, [producto.producto, producto.imagen, producto.precio], (err) => {
                             if (err) {
@@ -96,16 +91,32 @@ db.connect((err) => {
                             }
                         });
                         console.log('Productos insertados en la tabla "productos".');
-                    }else{
+                    } else {
                         console.log('El producto ya existe:', producto.producto);
                     }
-                });         
+                });
             });
-            
         });
     });
-});
 
+    // Crear tabla pedidos si no existe
+    const createPedidosTableQuery = `
+        CREATE TABLE IF NOT EXISTS pedidos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            usuario_id INT NOT NULL,
+            detalles TEXT NOT NULL,
+            total DECIMAL(10, 2) NOT NULL,
+            fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`;
+
+    db.query(createPedidosTableQuery, (err) => {
+        if (err) {
+            console.error('Error al crear la tabla pedidos:', err);
+            return;
+        }
+        console.log('Tabla "pedidos" creada o ya existe.');
+    });
+});
 
 app.post('/addProducto', upload.single('imagen'), (req, res) => {
     const { producto, precio } = req.body;
@@ -140,14 +151,12 @@ app.post('/addProducto', upload.single('imagen'), (req, res) => {
     });
 });
 
-
 // Ruta para actualizar un producto existente
 app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
     const { id } = req.params; // Obtener el id del producto desde la URL
     const { producto, precio } = req.body; // Datos que vamos a actualizar
     const imagen = req.file ? req.file.filename : req.body.imagen;
 
-    // Primero actualizamos en la base de datos
     const updateQuery = `
         UPDATE productos
         SET producto = ?, imagen = ?, precio = ?
@@ -160,7 +169,6 @@ app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
             return res.status(500).send('Error al actualizar el producto en la base de datos');
         }
 
-        // Comprobar si alguna fila fue actualizada
         if (result.affectedRows === 0) {
             return res.status(404).send('Producto no encontrado en la base de datos');
         }
@@ -187,7 +195,6 @@ app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
 app.delete('/deleteProducto/:id', (req, res) => {
     const { id } = req.params; // Obtener el id del producto desde la URL
 
-    // Eliminar el producto de la base de datos
     const deleteQuery = 'DELETE FROM productos WHERE id = ?';
 
     db.query(deleteQuery, [id], (err, result) => {
@@ -196,26 +203,22 @@ app.delete('/deleteProducto/:id', (req, res) => {
             return res.status(500).send('Error al eliminar el producto en la base de datos');
         }
 
-        // Comprobar si alguna fila fue eliminada
         if (result.affectedRows === 0) {
             return res.status(404).send('Producto no encontrado en la base de datos');
         }
 
-        // Si la eliminación en la base de datos fue exitosa, actualizamos el archivo JSON
         db.query('SELECT * FROM productos', (err, productos) => {
             if (err) {
                 console.error('Error al consultar productos para actualizar el archivo JSON:', err);
                 return res.status(500).send('Error al consultar productos');
             }
 
-            // Guardamos los productos actualizados en el archivo JSON
             fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
                 if (err) {
                     console.error('Error al escribir en el archivo JSON:', err);
                     return res.status(500).send('Error al escribir en el archivo JSON');
                 }
 
-                // Respondemos al cliente indicando que la eliminación fue exitosa
                 res.send('Producto eliminado con éxito y archivo JSON sincronizado');
             });
         });
@@ -237,34 +240,27 @@ app.get('/getProducto', (req, res) => {
 
 // Ruta para registrar una compra
 app.post('/registrarCompra', (req, res) => {
-    const { id, usuario_id, detalles, total, fecha_pedido } = req.body;
+    const { usuario_id, detalles, total, fecha } = req.body[0];  // Extrayendo el primer pedido del array recibido
 
-    // Validar que se recibieron todos los datos necesarios
-    if (!id || !usuario_id || !detalles || !total || !fecha_pedido) {
+    if (!usuario_id || !detalles || !total || !fecha) {
         return res.status(400).send('Faltan datos necesarios para registrar la compra');
     }
 
-    // Insertar la compra en la tabla "pedidos"
     const insertPurchaseQuery = `
-          INSERT INTO pedidos (id, usuario_id, detalles, total, fecha_pedido)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO pedidos (usuario_id, detalles, total, fecha_pedido)
+          VALUES (?, ?, ?, ?)
     `;
 
-    db.query(insertPurchaseQuery, [id, usuario_id, detalles, total, fecha_pedido], (err, result) => {
+    db.query(insertPurchaseQuery, [usuario_id, detalles, total, fecha], (err, result) => {
         if (err) {
             console.error('Error al registrar la compra en la base de datos:', err);
             return res.status(500).send('Error al registrar la compra en la base de datos');
         }
 
-        // Responder al cliente indicando que la compra se registró correctamente
         res.send('Compra registrada con éxito');
     });
 });
 
-
-
-
 app.listen(port, () => {
-    // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
     console.log(`Servidor escuchando en http://localhost:${port}`);
 });
