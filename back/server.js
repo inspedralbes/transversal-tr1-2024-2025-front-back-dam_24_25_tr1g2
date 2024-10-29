@@ -265,7 +265,7 @@ app.get('/getProducto', (req, res) => {
 });
 
 app.post('/registrarCompra', (req, res) => {
-    const { id, usuario_id, estado, detalles, total, fecha_pedido } = req.body;
+    const { id, usuario_id, estado, detalles, total, fecha_pedido } = req.body[0];
 
     if (!id || !usuario_id ||!estado ||!detalles || !total || !fecha_pedido) {
         return res.status(400).send('Faltan datos necesarios para registrar la compra');
