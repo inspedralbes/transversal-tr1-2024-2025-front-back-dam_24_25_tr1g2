@@ -40,7 +40,7 @@ header {
   padding: 1rem;
   align-items: center;
   background-color:#333333; /* Light Blue background */
-  border-bottom: 1px solid #4219a2;
+  border-bottom: 1px solid #00ff0d;
 }
 
 .logo {

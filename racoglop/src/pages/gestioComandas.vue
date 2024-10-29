@@ -2,40 +2,44 @@
     <div>
         <Header />
 
+        <v-container>
+            <v-card>
+                <v-card-title>
+                    <h1 class="text-center">Gestión de Comandas</h1>
+                </v-card-title>
+
+                <div class="comanda-container">
+                    <div class="comanda-header">
+                        <div class="comanda-item">Pedido ID</div>
+                        <div class="comanda-item">Usuario ID</div>
+                        <div class="comanda-item">Detalles</div>
+                        <div class="comanda-item">Total (€)</div>
+                        <div class="comanda-item">Fecha Pedido</div>
+                    </div>
+
+                    <!-- Mostrar todas las comandas si no hay ninguna seleccionada -->
+                    <div v-for="comanda in comandas" :key="comanda.id" v-show="!selectedComanda || selectedComanda.id === comanda.id" class="comanda-row" @click="selectComanda(comanda)">
+                        <div class="comanda-item">{{ comanda.id }}</div>
+                        <div class="comanda-item">{{ comanda.usuario_id }}</div>
+                        <div class="comanda-item">{{ comanda.detalles }}</div>
+                        <div class="comanda-item">{{ comanda.total }}</div>
+                        <div class="comanda-item">{{ comanda.fecha_pedido }}</div>
+                    </div>  
+
+                    <!-- Mostrar el estado del pedido y la fecha debajo de la comanda seleccionada -->
+                    <div v-if="selectedComanda" class="status-message">
+                        <h3>Estado del Pedido (ID: {{ selectedComanda.id }}):</h3>
+                        <p>{{ orderStatus }}</p>
+                        <p>Fecha de Pedido: {{ selectedComanda.fecha_pedido }}</p>
+                    </div>
+                </div>
+
+                <!-- Mensaje en caso de error -->
+                <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+            </v-card>
+        </v-container>
     </div>
-    <v-container>
-        <v-card>
-            <v-card-title>
-                <h1 class="text-center">Gestión de Comandas</h1>
-            </v-card-title>
-
-            <v-simple-table>
-                <thead>
-                    <tr>
-                        <th class="text-center">Pedido ID</th>
-                        <th class="text-center">Usuario ID</th>
-                        <th class="text-center">Detalles</th>
-                        <th class="text-center">Total (€)</th>
-                        <th class="text-center">Fecha Pedido</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="comanda in comandas" :key="comanda.id">
-                        <td class="text-center">{{ comanda.id }}</td>
-                        <td class="text-center">{{ comanda.usuario_id }}</td>
-                        <td class="text-center">{{ comanda.detalles }}</td>
-                        <td class="text-center">{{ comanda.total }}</td>
-                        <td class="text-center">{{ comanda.fecha_pedido }}</td>
-                    </tr>
-                </tbody>
-            </v-simple-table>
-
-            <!-- Mensaje en caso de error -->
-            <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-        </v-card>
-
-    </v-container>
-</template>     
+</template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
@@ -44,6 +48,8 @@ import Header from '../components/header.vue';
 
 const comandas = ref([]);
 const errorMessage = ref('');
+const selectedComanda = ref(null); // Estado para la comanda seleccionada
+const orderStatus = ref(''); // Estado para el mensaje del pedido
 
 onMounted(async () => {
     await fetchComandas();
@@ -58,11 +64,13 @@ const fetchComandas = async () => {
     }
 };
 
-// Función para regresar a la página anterior
-const goBack = () => {
-    window.history.back();
+// Método para manejar la selección de una comanda
+const selectComanda = (comanda) => {
+    // Asignar la comanda seleccionada o anular si es la misma para permitir deseleccionar
+    selectedComanda.value = selectedComanda.value?.id === comanda.id ? null : comanda;
+    orderStatus.value = "Enviado"; // Cambiar según la lógica deseada
 };
-</script>   
+</script>
 
 <style scoped>
 h1 {
@@ -83,31 +91,44 @@ h1 {
     background-color: #333;
 }
 
-/* Estilo para centrar el contenido de las celdas */
-th, td {
-    text-align: center; 
-    padding: 8px; 
+/* Estilos para contenedores y filas */
+.comanda-container {
+    display: flex;
+    flex-direction: column;
+    margin: 20px 0;
 }
 
-/* Mejorar la visibilidad de las columnas */
-th {
+.comanda-header, .comanda-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.comanda-header {
+    background-color: #444;
+    color: white;
+    font-weight: bold;
+}
+
+.comanda-row {
+    background-color: #555;
+    color: white;
+    margin: 5px 0;
+}
+
+.comanda-item {
+    flex: 1;
+    text-align: center;
+}
+
+/* Estilo para el estado del pedido */
+.status-message {
+    margin-top: 20px;
+    color: white;
+    text-align: center;
     background-color: #444; 
-    color: white; 
-}
-
-td {
-    background-color: #555; 
-    color: white; 
-}
-
-/* Asegura que el ancho de la tabla ocupe todo el espacio disponible */
-.v-simple-table {
-    width: 100%;
-    table-layout: auto; 
-}
-
-.v-btn {
-    margin: 20px 0; 
-    color: white; 
+    padding: 10px;
+    border-radius: 5px;
 }
 </style>
