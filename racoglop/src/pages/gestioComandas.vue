@@ -1,4 +1,8 @@
 <template>
+    <div>
+        <Header />
+
+    </div>
     <v-container>
         <v-card>
             <v-card-title>
@@ -30,14 +34,13 @@
             <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
         </v-card>
 
-        <!-- Botón para ir atrás -->
-        <v-btn color="primary" @click="goBack" class="mt-4" style="width: 10%;">Volver</v-btn>
     </v-container>
 </template>     
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { getComandas } from "../service/communicationManager";  
+import Header from '../components/header.vue'; 
 
 const comandas = ref([]);
 const errorMessage = ref('');

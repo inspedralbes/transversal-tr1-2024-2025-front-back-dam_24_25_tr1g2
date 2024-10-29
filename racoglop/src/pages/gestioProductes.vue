@@ -1,5 +1,6 @@
 <template>
     <div>
+        <Header />
         <v-container>
             <v-row justify="center">
                 <v-col cols="12" sm="8">
@@ -51,6 +52,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { getProductos, addProducto, updateProducto, deleteProducto } from "../service/communicationManager";
+import Header from '../components/header.vue'; 
 
 const productos = ref([]);
 const dialog = ref(false);
