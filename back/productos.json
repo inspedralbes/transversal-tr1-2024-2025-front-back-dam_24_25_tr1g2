@@ -1,70 +1,40 @@
 {
   "productos": [
     {
-      "id": 1,
-      "producto": "Blue Label",
-      "imagen": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQko9iqjKAmWUk6Nt59EY8CJ6mOz8DbUiAdAA&s",
-      "precio": "189.00"
-    },
-    {
-      "id": 2,
-      "producto": "Black Label",
-      "imagen": "https://example.com/image_black_label.jpg",
-      "precio": "39.99"
-    },
-    {
-      "id": 3,
-      "producto": "Red Label",
-      "imagen": "https://example.com/image_red_label.jpg",
-      "precio": "29.99"
-    },
-    {
-      "id": 4,
-      "producto": "Black Labelzz",
-      "imagen": "https://example.com/image_black_label.jpg",
-      "precio": "39.97"
-    },
-    {
-      "id": 5,
-      "producto": "",
-      "imagen": "",
-      "precio": "0.00"
-    },
-    {
       "id": 6,
       "producto": "Jack Daniel's Old No. 7",
       "imagen": "1730023558787-534215442.jpg",
       "precio": "24.99"
     },
     {
-      "id": 7,
+      "id": 16,
       "producto": "Macallan 12 Double Cask",
-      "imagen": "https://example.com/image_macallan_12.jpg",
+      "imagen": "",
       "precio": "75.00"
     },
     {
-      "id": 8,
-      "producto": "Jameson Irish Whiskey",
-      "imagen": "https://example.com/image_jameson.jpg",
-      "precio": "19.99"
-    },
-    {
-      "id": 9,
+      "id": 18,
       "producto": "Bulleit Bourbon",
-      "imagen": "https://example.com/image_bulleit.jpg",
+      "imagen": "",
       "precio": "29.99"
     },
     {
-      "id": 10,
-      "producto": "Glenfiddich 15 Year",
-      "imagen": "https://example.com/image_glenfiddich_15.jpg",
-      "precio": "60.00"
+      "id": 19,
+      "producto": "puta",
+      "imagen": "shdphasphfdop",
+      "precio": "50.00"
     },
     {
-      "id": 11,
-      "producto": "",
-      "imagen": "",
-      "precio": "0.00"
+      "id": 20,
+      "producto": "Blue Label",
+      "imagen": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQko9iqjKAmWUk6Nt59EY8CJ6mOz8DbUiAdAA&s",
+      "precio": "189.00"
+    },
+    {
+      "id": 21,
+      "producto": "Black Label",
+      "imagen": "https://example.com/image_black_label.jpg",
+      "precio": "39.99"
     }
   ]
 }

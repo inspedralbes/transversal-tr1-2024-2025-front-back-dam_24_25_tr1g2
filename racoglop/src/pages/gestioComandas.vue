@@ -15,6 +15,7 @@
                         <div class="comanda-item">Detalles</div>
                         <div class="comanda-item">Total (€)</div>
                         <div class="comanda-item">Fecha Pedido</div>
+                        <div class="comanda-item">Acciones</div>
                     </div>
 
                     <!-- Mostrar todas las comandas si no hay ninguna seleccionada -->
@@ -24,6 +25,9 @@
                         <div class="comanda-item">{{ comanda.detalles }}</div>
                         <div class="comanda-item">{{ comanda.total }}</div>
                         <div class="comanda-item">{{ comanda.fecha_pedido }}</div>
+                        <div class="comanda-item">
+                            <button @click.stop="handleDelete(comanda.id)">Eliminar</button>
+                        </div>
                     </div>  
 
                     <!-- Mostrar el estado del pedido y la fecha debajo de la comanda seleccionada -->
@@ -41,9 +45,10 @@
     </div>
 </template>
 
+
 <script setup>
 import { ref, onMounted } from 'vue';
-import { getComandas } from "../service/communicationManager";  
+import { getComandas, deleteComanda } from "../service/communicationManager";  
 import Header from '../components/header.vue'; 
 
 const comandas = ref([]);
@@ -66,11 +71,26 @@ const fetchComandas = async () => {
 
 // Método para manejar la selección de una comanda
 const selectComanda = (comanda) => {
-    // Asignar la comanda seleccionada o anular si es la misma para permitir deseleccionar
     selectedComanda.value = selectedComanda.value?.id === comanda.id ? null : comanda;
     orderStatus.value = "Enviado"; // Cambiar según la lógica deseada
 };
+
+// Método para eliminar una comanda
+const handleDelete = async (id) => {
+    try {
+        const response = await deleteComanda(id);
+        if (response.error) {
+            errorMessage.value = response.error;
+        } else {
+            comandas.value = comandas.value.filter((comanda) => comanda.id !== id);
+        }
+    } catch (error) {
+        errorMessage.value = 'Error al eliminar la comanda';
+        console.error("Error en el delete", error);
+    }
+};
 </script>
+
 
 <style scoped>
 h1 {
@@ -131,4 +151,24 @@ h1 {
     padding: 10px;
     border-radius: 5px;
 }
+
+
+button {
+    background-color: #e74c3c; /* Color rojo */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #c0392b; /* Rojo más oscuro en hover */
+}
+
+button:active {
+    background-color: #a93226; /* Rojo aún más oscuro cuando se presiona */
+}
+
 </style>

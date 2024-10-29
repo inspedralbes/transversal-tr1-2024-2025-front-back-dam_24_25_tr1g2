@@ -227,30 +227,31 @@ app.delete('/deleteProducto/:id', (req, res) => {
     db.query(deleteQuery, [id], (err, result) => {
         if (err) {
             console.error('Error al eliminar el producto en la base de datos:', err);
-            return res.status(500).send('Error al eliminar el producto en la base de datos');
+            return res.status(500).json({ error: 'Error al eliminar el producto en la base de datos' });
         }
 
         if (result.affectedRows === 0) {
-            return res.status(404).send('Producto no encontrado en la base de datos');
+            return res.status(404).json({ error: 'Producto no encontrado en la base de datos' });
         }
 
         db.query('SELECT * FROM productos', (err, productos) => {
             if (err) {
                 console.error('Error al consultar productos para actualizar el archivo JSON:', err);
-                return res.status(500).send('Error al consultar productos');
+                return res.status(500).json({ error: 'Error al consultar productos' });
             }
 
             fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
                 if (err) {
                     console.error('Error al escribir en el archivo JSON:', err);
-                    return res.status(500).send('Error al escribir en el archivo JSON');
+                    return res.status(500).json({ error: 'Error al escribir en el archivo JSON' });
                 }
 
-                res.send('Producto eliminado con éxito y archivo JSON sincronizado');
+                res.json({ message: 'Producto eliminado con éxito y archivo JSON sincronizado' });
             });
         });
     });
 });
+
 
 app.get('/getProducto', (req, res) => {
     const query = 'SELECT * FROM productos'; 
@@ -306,22 +307,24 @@ app.get('/registrarCompra', (req, res) => {
     });
 });
 
-app.delete('/deleteCompra/:id', (req, res) => {
+app.delete('/eliminarCompra/:id', (req, res) => {
     const { id } = req.params;
 
-    const deleteQuery = 'DELETE FROM pedidos WHERE id = ?';
+    const deletePurchaseQuery = `
+        DELETE FROM pedidos WHERE id = ?
+    `;
 
-    db.query(deleteQuery, [id], (err, result) => {
+    db.query(deletePurchaseQuery, [id], (err, result) => {
         if (err) {
             console.error('Error al eliminar la compra en la base de datos:', err);
-            return res.status(500).send('Error al eliminar la compra en la base de datos');
+            return res.status(500).json({ error: 'Error al eliminar la compra en la base de datos' });
         }
 
         if (result.affectedRows === 0) {
-            return res.status(404).send('Compra no encontrada en la base de datos');
+            return res.status(404).json({ error: 'Compra no encontrada' });
         }
 
-        res.send('Compra eliminada con éxito');
+        res.json({ message: 'Compra eliminada con éxito' });
     });
 });
 

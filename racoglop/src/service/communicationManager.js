@@ -63,13 +63,35 @@ export const updateProducto = async (id, formData) => {
 
 export const deleteProducto = async (id) => {
     try {
-        const response = await fetch(`${ruta}/deleteProducto/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${ruta}/deleteProducto/${id}`,{
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
         if (!response.ok) {
             throw new Error('Error al eliminar el producto');
         }
         return await response.json();
     } catch (error) {
         console.error('Error deleting product:', error);
+        throw error;
+    }
+};
+
+
+export const deleteComanda = async (id) => {
+    try {
+        const response = await fetch(`${ruta}/eliminarCompra/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error deleting comanda:', error);
         throw error;
     }
 };
