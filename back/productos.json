@@ -1,12 +1,6 @@
 {
   "productos": [
     {
-      "id": 6,
-      "producto": "Jack Daniel's Old No. 7",
-      "imagen": "1730023558787-534215442.jpg",
-      "precio": "24.99"
-    },
-    {
       "id": 16,
       "producto": "Macallan 12 Double Cask",
       "imagen": "",
