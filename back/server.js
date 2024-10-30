@@ -109,15 +109,15 @@ db.connect((err) => {
 
 
 const createPedidosTableQuery = `
-            CREATE TABLE IF NOT EXISTS pedidos (
-                id INT PRIMARY KEY,
-                usuario_id INT,
-                detalles TEXT,
-                estado VARCHAR(255) DEFAULT 'Pendiente',
-                total DECIMAL(10, 2),
-                fecha_pedido DATE
-            )
-        `;
+    CREATE TABLE IF NOT EXISTS pedidos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario_id INT,
+        detalles TEXT,
+        estado VARCHAR(255) DEFAULT 'Pendiente',
+        total DECIMAL(10, 2),
+        fecha_pedido DATE
+    )
+`;
 
         db.query(createPedidosTableQuery, (err) => {
             if (err) {
@@ -266,18 +266,20 @@ app.get('/getProducto', (req, res) => {
 });
 
 app.post('/registrarCompra', (req, res) => {
-    const { id, usuario_id, estado, detalles, total, fecha_pedido } = req.body[0];
+    console.log("Datos recibidos en /registrarCompra:", req.body);
+    const { usuario_id, detalles, estado, total, fecha_pedido } = req.body[0] || {};
 
-    if (!id || !usuario_id ||!estado ||!detalles || !total || !fecha_pedido) {
-        return res.status(400).send('Faltan datos necesarios para registrar la compra');
+    if (!usuario_id || !detalles || !estado || !total || !fecha_pedido) {
+        console.error("Datos incompletos para registrar la compra:", req.body[0]);
+        return res.status(400).send('Datos incompletos para registrar la compra');
     }
 
     const insertPurchaseQuery = `
-          INSERT INTO pedidos (id, usuario_id, estado, detalles, total, fecha_pedido)
-            VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO pedidos (usuario_id, detalles, estado, total, fecha_pedido)
+        VALUES (?, ?, ?, ?, ?)
     `;
 
-    db.query(insertPurchaseQuery, [id, usuario_id, estado, detalles, total, fecha_pedido], (err, result) => {
+    db.query(insertPurchaseQuery, [usuario_id, detalles, estado, total, fecha_pedido], (err, result) => {
         if (err) {
             console.error('Error al registrar la compra en la base de datos:', err);
             return res.status(500).send('Error al registrar la compra en la base de datos');
@@ -287,25 +289,6 @@ app.post('/registrarCompra', (req, res) => {
     });
 });
 
-// Ruta para obtener todas las compras registradas
-app.get('/registrarCompra', (req, res) => {
-    const query = `
-        SELECT pedidos.*, 
-               GROUP_CONCAT(producto.producto, ' (Cantidad: ', pedido_productos.cantidad, ')') AS productos_comprados
-        FROM pedidos
-        LEFT JOIN pedido_productos ON pedidos.id = pedido_productos.pedido_id
-        LEFT JOIN productos AS producto ON pedido_productos.producto_id = producto.id
-        GROUP BY pedidos.id
-    `;
-
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error('Error al obtener las compras:', err);
-            return res.status(500).send('Error al obtener las compras');
-        }
-        res.json(results);
-    });
-});
 
 app.delete('/eliminarCompra/:id', (req, res) => {
     const { id } = req.params;
