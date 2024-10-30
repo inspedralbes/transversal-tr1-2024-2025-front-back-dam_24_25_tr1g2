@@ -22,6 +22,7 @@
                     <div v-for="comanda in comandas" :key="comanda.id" v-show="!selectedComanda || selectedComanda.id === comanda.id" class="comanda-row" @click="selectComanda(comanda)">
                         <div class="comanda-item">{{ comanda.id }}</div>
                         <div class="comanda-item">{{ comanda.usuario_id }}</div>
+                        <div class="comanda-item">{{ comanda.estado }}</div>
                         <div class="comanda-item">{{ comanda.detalles }}</div>
                         <div class="comanda-item">{{ comanda.total }}</div>
                         <div class="comanda-item">{{ comanda.fecha_pedido }}</div>

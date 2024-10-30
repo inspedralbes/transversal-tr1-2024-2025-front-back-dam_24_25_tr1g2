@@ -3,7 +3,7 @@ let ruta = 'http://localhost:3001';
 // Función para obtener las comandas desde el servidor
 export const getComandas = async () => {
     try {
-        const response = await fetch(`${ruta}/registrarCompra`);
+        const response = await fetch(`${ruta}/getPedidos`);
         if (!response.ok) {
             throw new Error('Error al obtener las comandas');
         }

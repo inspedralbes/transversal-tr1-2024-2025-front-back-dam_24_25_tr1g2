@@ -289,6 +289,19 @@ app.post('/registrarCompra', (req, res) => {
     });
 });
 
+app.get('/getPedidos', (req, res) => {
+    const query = 'SELECT * FROM pedidos';
+
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error en la consulta:', err);
+            return res.status(500).send('Error en la consulta a la base de datos');
+        }
+        res.json(result);
+    });
+})
+
+
 
 app.delete('/eliminarCompra/:id', (req, res) => {
     const { id } = req.params;
