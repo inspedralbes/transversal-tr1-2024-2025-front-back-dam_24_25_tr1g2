@@ -17,10 +17,10 @@ app.use(cors());
 app.use('/imagen', express.static(path.join(__dirname, 'public/imagen')));
 
 const storage = multer.diskStorage({
-    destination:  (req, file, cb) =>{
+    destination: (req, file, cb) => {
         cb(null, 'public/imagen');
     },
-    filename: (req, file, cb) =>{
+    filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const extension = path.extname(file.originalname);
         cb(null, uniqueSuffix + extension);
@@ -34,7 +34,7 @@ const db = mysql.createConnection({
     user: 'root',
     password: '',
     database: 'tr1_g2-alcohol',
-    connectTimeout: 10000 
+    connectTimeout: 10000
 });
 
 // const db = mysql.createConnection({
@@ -51,6 +51,25 @@ db.connect((err) => {
         return;
     }
     console.log('Conexión exitosa a la base de datos.');
+
+    const createUsuarioTableQuery = `
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nombre VARCHAR(255) NOT NULL,
+            apellido VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            direccion VARCHAR(255) NOT NULL
+        )
+    `;
+
+    db.query(createUsuarioTableQuery, (err) => {
+        if (err) {
+            console.error('Error al crear la tabla usuarios:', err);
+            return;
+        }
+        console.log('Tabla "usuarios" creada o ya existe.');
+    });
 
     // Crear tabla productos si no existe
     const createTableQuery = `
@@ -89,7 +108,7 @@ db.connect((err) => {
                         console.log('El producto ya existe:', producto.producto);
                         return;
                     }
-                    if(result.length == 0 ){
+                    if (result.length == 0) {
                         const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
                         db.query(insertQuery, [producto.producto, producto.imagen, producto.precio], (err) => {
                             if (err) {
@@ -97,37 +116,36 @@ db.connect((err) => {
                             }
                         });
                         console.log('Productos insertados en la tabla "productos".');
-                    }else{
+                    } else {
                         console.log('El producto ya existe:', producto.producto);
                     }
-                });         
+                });
             });
-            
+
         });
     });
-});
 
-
-const createPedidosTableQuery = `
+    const createPedidosTableQuery = `
     CREATE TABLE IF NOT EXISTS pedidos (
         id INT AUTO_INCREMENT PRIMARY KEY,
         usuario_id INT,
         detalles TEXT,
         estado VARCHAR(255) DEFAULT 'Pendiente',
         total DECIMAL(10, 2),
-        fecha_pedido DATE
+        fecha_pedido DATE,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     )
 `;
 
-        db.query(createPedidosTableQuery, (err) => {
-            if (err) {
-                console.error('Error al crear la tabla pedidos:', err);
-                return;
-            }
-            console.log('Tabla "pedidos" creada o ya existe.');
+    db.query(createPedidosTableQuery, (err) => {
+        if (err) {
+            console.error('Error al crear la tabla pedidos:', err);
+            return;
+        }
+        console.log('Tabla "pedidos" creada o ya existe.');
 
-            // Crear tabla intermedia pedido_productos
-            const createPedidoProductosTableQuery = `
+        // Crear tabla intermedia pedido_productos
+        const createPedidoProductosTableQuery = `
                 CREATE TABLE IF NOT EXISTS pedido_productos (
                     pedido_id INT,
                     producto_id INT,
@@ -138,35 +156,39 @@ const createPedidosTableQuery = `
                 )
             `;
 
-            db.query(createPedidoProductosTableQuery, (err) => {
-                if (err) {
-                    console.error('Error al crear la tabla pedido_productos:', err);
-                    return;
-                }
-                console.log('Tabla "pedido_productos" creada o ya existe.');
-            });
-        });
-
-        app.post('/addProducto', upload.single('imagen'), (req, res) => {
-            const { producto, precio } = req.body;
-            const imagen = req.file ? req.file.filename : null;
-        
-            if (!producto || !imagen || !precio) {
-                return res.status(400).send('Faltan datos para agregar el producto');
+        db.query(createPedidoProductosTableQuery, (err) => {
+            if (err) {
+                console.error('Error al crear la tabla pedido_productos:', err);
+                return;
             }
-        
-            const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
-        
-            db.query(insertQuery, [producto, imagen, precio], (err, result) => {
-                if (err) {
-                    console.error('Error al insertar el producto en la base de datos:', err);
-                    return res.status(500).send('Error al insertar el producto en la base de datos');
-                }
-        
-                res.status(201).json(result.insertId);
-            });
+            console.log('Tabla "pedido_productos" creada o ya existe.');
         });
-        
+    });
+});
+
+
+
+
+app.post('/addProducto', upload.single('imagen'), (req, res) => {
+    const { producto, precio } = req.body;
+    const imagen = req.file ? req.file.filename : null;
+
+    if (!producto || !imagen || !precio) {
+        return res.status(400).send('Faltan datos para agregar el producto');
+    }
+
+    const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
+
+    db.query(insertQuery, [producto, imagen, precio], (err, result) => {
+        if (err) {
+            console.error('Error al insertar el producto en la base de datos:', err);
+            return res.status(500).send('Error al insertar el producto en la base de datos');
+        }
+
+        res.status(201).json(result.insertId);
+    });
+});
+
 
 
 app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
@@ -254,8 +276,8 @@ app.delete('/deleteProducto/:id', (req, res) => {
 
 
 app.get('/getProducto', (req, res) => {
-    const query = 'SELECT * FROM productos'; 
-    
+    const query = 'SELECT * FROM productos';
+
     db.query(query, (err, result) => {
         if (err) {
             console.error('Error en la consulta:', err);
