@@ -225,31 +225,56 @@ app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
 app.delete('/deleteProducto/:id', (req, res) => {
     const { id } = req.params;
 
-    const deleteQuery = 'DELETE FROM productos WHERE id = ?';
 
-    db.query(deleteQuery, [id], (err, result) => {
+    const selectQuery = 'SELECT imagen FROM productos WHERE id = ?';
+
+    db.query(selectQuery, [id], (err, result) => {
         if (err) {
-            console.error('Error al eliminar el producto en la base de datos:', err);
-            return res.status(500).json({ error: 'Error al eliminar el producto en la base de datos' });
+            console.error('Error al consultar el producto en la base de datos:', err);
+            return res.status(500).json({ error: 'Error al consultar el producto en la base de datos' });
         }
 
-        if (result.affectedRows === 0) {
+        if (result.length === 0) {
             return res.status(404).json({ error: 'Producto no encontrado en la base de datos' });
         }
 
-        db.query('SELECT * FROM productos', (err, productos) => {
+        const imagen = result[0].imagen;
+
+        const deleteQuery = 'DELETE FROM productos WHERE id = ?';
+
+        db.query(deleteQuery, [id], (err, result) => {
             if (err) {
-                console.error('Error al consultar productos para actualizar el archivo JSON:', err);
-                return res.status(500).json({ error: 'Error al consultar productos' });
+                console.error('Error al eliminar el producto en la base de datos:', err);
+                return res.status(500).json({ error: 'Error al eliminar el producto en la base de datos' });
             }
 
-            fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Producto no encontrado en la base de datos' });
+            }
+
+            const imagePath = path.join(__dirname, 'public/imagen', imagen);
+
+            fs.unlink(imagePath, (err) => {
                 if (err) {
-                    console.error('Error al escribir en el archivo JSON:', err);
-                    return res.status(500).json({ error: 'Error al escribir en el archivo JSON' });
+                    console.error('Error al eliminar el archivo de imagen:', err);
+                    return res.status(500).json({ error: 'Error al eliminar el archivo de imagen' });
                 }
 
-                res.json({ message: 'Producto eliminado con éxito y archivo JSON sincronizado' });
+                db.query('SELECT * FROM productos', (err, productos) => {
+                    if (err) {
+                        console.error('Error al consultar productos para actualizar el archivo JSON:', err);
+                        return res.status(500).json({ error: 'Error al consultar productos' });
+                    }
+
+                    fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
+                        if (err) {
+                            console.error('Error al escribir en el archivo JSON:', err);
+                            return res.status(500).json({ error: 'Error al escribir en el archivo JSON' });
+                        }
+
+                        res.json({ message: 'Producto eliminado con éxito y archivo JSON sincronizado' });
+                    });
+                });
             });
         });
     });
