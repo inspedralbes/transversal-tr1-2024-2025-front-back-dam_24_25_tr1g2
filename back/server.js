@@ -5,8 +5,9 @@ const cors = require('cors');
 const app = express();
 const multer = require('multer');
 const path = require('path');
-const port = 3001;
-// const port = 23457;
+
+// const port = 3001;
+const port = 23459;
 
 // Middleware para permitir el parsing de JSON en los requests
 app.use(express.json({ limit: '200mb' }));
@@ -29,21 +30,23 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'tr1_g2-alcohol',
-    connectTimeout: 10000 
-});
-
 // const db = mysql.createConnection({
-//     host: 'dam.inspedralbes.cat',
-//     user: 'a23hashusraf_tr1-g2', 
-//     password: 'InsPedralbes2024',
-//     database: 'a23hashusraf_tr1-g2',
+//     host: 'localhost',
+//     user: 'root',
+//     password: '',
+//     database: 'tr1_g2-alcohol',
 //     connectTimeout: 10000 
 // });
+
+const db = mysql.createConnection({
+    host: 'dam.inspedralbes.cat',
+    user: 'a23hashusraf_tr1-g2', 
+    password: 'InsPedralbes2024',
+    database: 'a23hashusraf_tr1-g2',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
 db.connect((err) => {
     if (err) {
@@ -327,6 +330,6 @@ app.delete('/eliminarCompra/:id', (req, res) => {
 
 
 app.listen(port, () => {
-    // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
-    console.log(`Servidor escuchando en http://localhost:${port}`);
+    console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
+    // console.log(`Servidor escuchando en http://localhost:${port}`);
 });

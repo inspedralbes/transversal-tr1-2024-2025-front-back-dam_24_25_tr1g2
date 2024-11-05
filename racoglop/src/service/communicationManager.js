@@ -1,4 +1,5 @@
-let ruta = 'http://localhost:3001';
+// let ruta = 'http://localhost:3001';
+let ruta = 'http://tr1g2.dam.inspedralbes.cat:23459';
 
 // Función para obtener las comandas desde el servidor
 export const getComandas = async () => {
