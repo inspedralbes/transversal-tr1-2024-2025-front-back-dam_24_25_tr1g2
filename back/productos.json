@@ -1,22 +1,34 @@
 {
   "productos": [
     {
-      "id": 1,
+      "id": 16,
+      "producto": "Macallan 12 Double Cask",
+      "imagen": "",
+      "precio": "75.00"
+    },
+    {
+      "id": 18,
+      "producto": "Bulleit Bourbon",
+      "imagen": "",
+      "precio": "29.99"
+    },
+    {
+      "id": 19,
+      "producto": "puta",
+      "imagen": "shdphasphfdop",
+      "precio": "50.00"
+    },
+    {
+      "id": 20,
       "producto": "Blue Label",
       "imagen": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQko9iqjKAmWUk6Nt59EY8CJ6mOz8DbUiAdAA&s",
       "precio": "189.00"
     },
     {
-      "id": 2,
-      "producto": "Black Labelzz",
+      "id": 21,
+      "producto": "Black Label",
       "imagen": "https://example.com/image_black_label.jpg",
-      "precio": "39.97"
-    },
-    {
-      "id": 3,
-      "producto": "Red Label",
-      "imagen": "https://example.com/image_red_label.jpg",
-      "precio": "29.99"
+      "precio": "39.99"
     }
   ]
 }
