@@ -147,38 +147,27 @@ const createPedidosTableQuery = `
             });
         });
 
-app.post('/addProducto', upload.single('imagen'), (req, res) => {
-    const { producto, precio } = req.body;
-    const imagen = req.file ? req.file.filename : null;
-
-    if (!producto || !imagen || !precio) {
-        return res.status(400).send('Faltan datos para agregar el producto');
-    }
-
-    const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
-
-    db.query(insertQuery, [producto, imagen, precio], (err, result) => {
-        if (err) {
-            console.error('Error al insertar el producto en la base de datos:', err);
-            return res.status(500).send('Error al insertar el producto en la base de datos');
-        }
-
-        db.query('SELECT * FROM productos', (err, productos) => {
-            if (err) {
-                console.error('Error al consultar productos para actualizar el archivo JSON:', err);
-                return res.status(500).send('Error al consultar productos');
+        app.post('/addProducto', upload.single('imagen'), (req, res) => {
+            const { producto, precio } = req.body;
+            const imagen = req.file ? req.file.filename : null;
+        
+            if (!producto || !imagen || !precio) {
+                return res.status(400).send('Faltan datos para agregar el producto');
             }
-
-            fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
+        
+            const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
+        
+            db.query(insertQuery, [producto, imagen, precio], (err, result) => {
                 if (err) {
-                    console.error('Error al escribir en el archivo JSON:', err);
-                    return res.status(500).send('Error al escribir en el archivo JSON');
+                    console.error('Error al insertar el producto en la base de datos:', err);
+                    return res.status(500).send('Error al insertar el producto en la base de datos');
                 }
+        
                 res.status(201).json(result.insertId);
             });
         });
-    });
-});
+        
+
 
 app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
     const { id } = req.params; // Obtener el id del producto desde la URL
@@ -201,21 +190,7 @@ app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
             return res.status(404).send('Producto no encontrado en la base de datos');
         }
 
-        db.query('SELECT * FROM productos', (err, productos) => {
-            if (err) {
-                console.error('Error al consultar productos para actualizar el archivo JSON:', err);
-                return res.status(500).send('Error al consultar productos');
-            }
-
-            fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
-                if (err) {
-                    console.error('Error al escribir en el archivo JSON:', err);
-                    return res.status(500).send('Error al escribir en el archivo JSON');
-                }
-
-                res.send('Producto actualizado con éxito y archivo JSON sincronizado');
-            });
-        });
+        res.send('Producto actualizado con éxito');
     });
 });
 
