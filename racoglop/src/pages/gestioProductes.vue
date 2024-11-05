@@ -13,7 +13,7 @@
                             <v-card class="product-card">
                                 <v-card-title>{{ producto.producto }}</v-card-title>
                                 <v-card-subtitle>€{{ producto.precio }}</v-card-subtitle>
-                                <v-img :src="`http://tr1g2.dam.inspedralbes.cat:23459/imagen/${producto.imagen}`" max-width="200" class="mx-auto"></v-img>
+                                <v-img :src="`http://localhost:3001/imagen/${producto.imagen}`" max-width="200" class="mx-auto"></v-img>
                                 <v-card-actions>
                                     <v-btn icon color="blue" @click="openEditDialog(producto)">
                                         <v-icon>mdi-pencil</v-icon>

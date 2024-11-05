@@ -6,8 +6,8 @@ const app = express();
 const multer = require('multer');
 const path = require('path');
 
-// const port = 3001;
-const port = 23459;
+const port = 3001;
+// const port = 23459;
 
 // Middleware para permitir el parsing de JSON en los requests
 app.use(express.json({ limit: '200mb' }));
@@ -30,23 +30,23 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// const db = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: '',
-//     database: 'tr1_g2-alcohol',
-//     connectTimeout: 10000 
-// });
-
 const db = mysql.createConnection({
-    host: 'dam.inspedralbes.cat',
-    user: 'a23hashusraf_tr1-g2', 
-    password: 'InsPedralbes2024',
-    database: 'a23hashusraf_tr1-g2',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'tr1_g2-alcohol',
+    connectTimeout: 10000 
 });
+
+// const db = mysql.createConnection({
+//     host: 'dam.inspedralbes.cat',
+//     user: 'a23hashusraf_tr1-g2', 
+//     password: 'InsPedralbes2024',
+//     database: 'a23hashusraf_tr1-g2',
+//     waitForConnections: true,
+//     connectionLimit: 10,
+//     queueLimit: 0
+// });
 
 db.connect((err) => {
     if (err) {
@@ -55,18 +55,18 @@ db.connect((err) => {
     }
     console.log('Conexión exitosa a la base de datos.');
 
-    const createUsuarioTableQuery = `
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            nombre VARCHAR(255) NOT NULL,
-            apellido VARCHAR(255) NOT NULL,
-            email VARCHAR(255) NOT NULL,
-            password VARCHAR(255) NOT NULL,
-            direccion VARCHAR(255) NOT NULL
-        )
-    `;
+    const createUsuariosTableQuery = `
+    CREATE TABLE IF NOT EXISTS usuario (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(255) NOT NULL,
+        apellido VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        direccion VARCHAR(255) NOT NULL
+    ) ENGINE=InnoDB;
+`;
 
-    db.query(createUsuarioTableQuery, (err) => {
+    db.query(createUsuariosTableQuery , (err) => {
         if (err) {
             console.error('Error al crear la tabla usuarios:', err);
             return;
@@ -136,7 +136,7 @@ db.connect((err) => {
         estado VARCHAR(255) DEFAULT 'Pendiente',
         total DECIMAL(10, 2),
         fecha_pedido DATE,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
     )
 `;
 
@@ -376,6 +376,6 @@ app.put('/actualizarCompra/:id', (req, res) => {
 
 
 app.listen(port, () => {
-    console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
-    // console.log(`Servidor escuchando en http://localhost:${port}`);
+    // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
+    console.log(`Servidor escuchando en http://localhost:${port}`);
 });
