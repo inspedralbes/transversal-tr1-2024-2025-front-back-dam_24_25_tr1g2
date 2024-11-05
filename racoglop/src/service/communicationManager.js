@@ -96,3 +96,22 @@ export const deleteComanda = async (id) => {
         throw error;
     }
 };
+
+export const updateComanda = async (comanda) => {
+    try {
+        const response = await fetch(`${ruta}/actualizarCompra/${comanda.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                estado: comanda.estado,
+                detalles: comanda.detalles
+            })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating comanda:', error);
+        throw error;
+    }
+};

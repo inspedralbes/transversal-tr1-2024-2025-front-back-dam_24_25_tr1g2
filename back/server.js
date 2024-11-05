@@ -327,6 +327,30 @@ app.delete('/eliminarCompra/:id', (req, res) => {
     });
 });
 
+app.put('/actualizarCompra/:id', (req, res) => {
+    const { id } = req.params;
+    const { estado, detalles } = req.body;
+
+    const updatePurchaseQuery = `
+        UPDATE pedidos
+        SET estado = ?, detalles = ?
+        WHERE id = ?
+    `;
+
+    db.query(updatePurchaseQuery, [estado, detalles, id], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar la compra en la base de datos:', err);
+            return res.status(500).json({ error: 'Error al actualizar la compra en la base de datos' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Compra no encontrada' });
+        }
+
+        res.json({ message: 'Compra actualizada con éxito' });
+    });
+});
+
 
 
 app.listen(port, () => {
