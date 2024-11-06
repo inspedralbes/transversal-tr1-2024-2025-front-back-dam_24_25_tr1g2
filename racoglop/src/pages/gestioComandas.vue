@@ -55,14 +55,31 @@
 import { ref, onMounted } from 'vue';
 import { getComandas, deleteComanda } from "../service/communicationManager";  
 import Header from '../components/header.vue'; 
+import { io } from 'socket.io-client';
 
 const comandas = ref([]);
 const errorMessage = ref('');
 const selectedComanda = ref(null); // Estado para la comanda seleccionada
 const orderStatus = ref(''); // Estado para el mensaje del pedido
+let socket;
 
 onMounted(async () => {
     await fetchComandas();
+
+        // Configura el cliente de Socket.IO
+        socket = io("http://localhost:3001"); // Asegúrate de que esta URL coincida con la de tu servidor
+
+    // Escucha el evento 'nueva_compra' desde el servidor
+    socket.on("nueva_compra", (compra) => {
+        comandas.value.push(compra); // Agrega la nueva comanda a la lista en tiempo real
+        orderStatus.value = `Nueva compra registrada para el usuario ${compra.usuario_id}`;
+    });
+});
+
+onUnmounted(() => {
+    if (socket) {
+        socket.disconnect();
+    }
 });
 
 const fetchComandas = async () => {

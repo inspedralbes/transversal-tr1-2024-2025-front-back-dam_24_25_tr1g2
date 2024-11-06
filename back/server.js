@@ -5,6 +5,8 @@ const cors = require('cors');
 const app = express();
 const multer = require('multer');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const port = 3001;
 // const port = 23459;
@@ -16,6 +18,9 @@ app.use(express.json());
 app.use(cors());
 
 app.use('/imagen', express.static(path.join(__dirname, 'public/imagen')));
+
+const server = http.createServer(app); // Crear servidor HTTP para usar con Socket.IO
+const io = new Server(server);
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -310,7 +315,17 @@ app.post('/registrarCompra', (req, res) => {
             return res.status(500).send('Error al registrar la compra en la base de datos');
         }
 
+        io.emit('nueva_compra', { usuario_id, detalles, estado, total, fecha_pedido });
+
         res.send('Compra registrada con éxito');
+    });
+});
+
+io.on('connection', (socket) => {
+    console.log('Un cliente se ha conectado:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('Un cliente se ha desconectado:', socket.id);
     });
 });
 
