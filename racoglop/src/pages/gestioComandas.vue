@@ -12,7 +12,7 @@
 
                 <v-row class="text-center font-weight-bold py-2" align="center" no-gutters>
                     <v-col class="text-center">Pedido ID</v-col>
-                    <v-col class="text-center">Usuario ID</v-col>
+                    <v-col class="text-center">Usuario</v-col>
                     <v-col class="text-center">Estado</v-col>
                     <v-col class="text-center">Detalles</v-col>
                     <v-col class="text-center">Total (€)</v-col>
@@ -25,7 +25,7 @@
                 <!-- Mostrar todas las comandas si no hay ninguna seleccionada -->
                 <v-row v-for="comanda in comandas" :key="comanda.id" class="comanda-row" no-gutters>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.id }}</v-col>
-                    <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.usuario_id }}</v-col>
+                    <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ users[comanda.usuario_id]?.nombre || 'Usuario desconocido' }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.estado }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.detalles }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.total }}</v-col>
@@ -41,11 +41,9 @@
                         <h3>Estado del Pedido (ID: {{ selectedComanda.id }}):</h3>
                         <p>{{ orderStatus }}</p>
                         <p>Fecha de Pedido: {{ selectedComanda.fecha_pedido }}</p>
+                        <p>Dirección del Usuario : {{ users[selectedComanda.usuario_id]?.direccion || 'Dirección desconocida' }}</p>
                     </v-col>
                 </v-row>
-
-                <!-- Mensaje en caso de error -->
-                <v-alert v-if="errorMessage" type="error" class="my-2">{{ errorMessage }}</v-alert>
             </v-card>
         </v-container>
     </div>
@@ -53,17 +51,32 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { getComandas, deleteComanda } from "../service/communicationManager";  
+import { getComandas, deleteComanda, getUsuarios } from "../service/communicationManager";  
 import Header from '../components/header.vue'; 
 
 const comandas = ref([]);
 const errorMessage = ref('');
 const selectedComanda = ref(null); // Estado para la comanda seleccionada
 const orderStatus = ref(''); // Estado para el mensaje del pedido
+const users = ref({});
 
 onMounted(async () => {
     await fetchComandas();
+    await fetchUsuarios();
 });
+
+const fetchUsuarios = async () => {
+    try {
+        const userData = await getUsuarios();
+        users.value = userData.reduce((acc, user) => {
+            acc[user.id] = user;
+            return acc;
+        }, {});
+    } catch (error) {
+        errorMessage.value = "Error al cargar los usuarios";
+        console.error("Error en el fetch", error);
+    }
+};
 
 const fetchComandas = async () => {
     try {
@@ -95,7 +108,6 @@ const handleDelete = async (id) => {
     }
 };
 </script>
-
 
 <style scoped>
 h1 {

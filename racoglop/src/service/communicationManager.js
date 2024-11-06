@@ -115,3 +115,17 @@ export const updateComanda = async (comanda) => {
         throw error;
     }
 };
+
+
+export const getUsuarios = async () => {
+    try {
+        const response = await fetch(`${ruta}/getUsuarios`);
+        if (!response.ok) {
+            throw new Error('Error al obtener los usuarios');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+    }
+};

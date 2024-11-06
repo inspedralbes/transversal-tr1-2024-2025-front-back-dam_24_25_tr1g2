@@ -424,16 +424,17 @@ app.post('/login', (req, res) => {
 });
 
 
-// CREATE TABLE IF NOT EXISTS usuario (
-//     id INT AUTO_INCREMENT PRIMARY KEY,
-//     nombre VARCHAR(255) NOT NULL,
-//     apellido VARCHAR(255) NOT NULL,
-//     email VARCHAR(255) NOT NULL UNIQUE,
-//     password VARCHAR(255) NOT NULL,
-//     direccion VARCHAR(255) NOT NULL
-// ) ENGINE=InnoDB;
-// `;
+app.get('/getUsuarios', (req, res) => {
+    const query = 'SELECT * FROM usuario';
 
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error en la consulta:', err);
+            return res.status(500).send('Error en la consulta a la base de datos');
+        }
+        res.json(result);
+    });
+});
 
 
 app.listen(port, () => {
