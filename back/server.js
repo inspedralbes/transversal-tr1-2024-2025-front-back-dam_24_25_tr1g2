@@ -74,6 +74,8 @@ db.connect((err) => {
         console.log('Tabla "usuarios" creada o ya existe.');
     });
 
+
+
     // Crear tabla productos si no existe
     const createTableQuery = `
         CREATE TABLE IF NOT EXISTS productos (
@@ -168,8 +170,6 @@ db.connect((err) => {
         });
     });
 });
-
-
 
 
 app.post('/addProducto', upload.single('imagen'), (req, res) => {
@@ -372,6 +372,38 @@ app.put('/actualizarCompra/:id', (req, res) => {
         res.json({ message: 'Compra actualizada con éxito' });
     });
 });
+
+app.post('/registrar', (req, res) => {
+    console.log("Datos en /registrar:", req.body);
+    const { id, nombre, apellido, email, password, direccion } = req.body[0] || {};
+    if (!id || !nombre || !apellido || !email || !password || !direccion) {
+        console.error("Datos incompletos para registrarse:", req.body[0]);
+        return res.status(400).send('Datos incompletos para registrar');
+    }
+    const insertUser = `
+    INSERT INTO usuario (id, nombre, apellido, email, password, direccion)
+    VALUES (?, ?, ?, ?, ?, ?)
+`;
+
+db.query(insertUser, [id, nombre, apellido, email, password, direccion], (err, result) => {
+    if (err) {
+        console.error('Error al registrarse:', err);
+        return res.status(500).send('Error al registrar en la base de datos');
+    }
+
+    res.send('Registro existoso');
+});
+});
+
+// CREATE TABLE IF NOT EXISTS usuario (
+//     id INT AUTO_INCREMENT PRIMARY KEY,
+//     nombre VARCHAR(255) NOT NULL,
+//     apellido VARCHAR(255) NOT NULL,
+//     email VARCHAR(255) NOT NULL UNIQUE,
+//     password VARCHAR(255) NOT NULL,
+//     direccion VARCHAR(255) NOT NULL
+// ) ENGINE=InnoDB;
+// `;
 
 
 
