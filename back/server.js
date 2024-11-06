@@ -395,6 +395,35 @@ db.query(insertUser, [id, nombre, apellido, email, password, direccion], (err, r
 });
 });
 
+app.post('/login', (req, res) => {
+    // Accedemos al primer objeto del array en lugar de req.body directamente
+    const { email, password } = req.body[0] || {};
+
+    // Verificar que se envíen ambos campos
+    if (!email || !password) {
+        return res.status(400).send('Faltan datos: email o contraseña no proporcionados');
+    }
+
+    // Consulta para verificar si el usuario existe con el email y password proporcionados
+    const query = 'SELECT * FROM usuario WHERE email = ? AND password = ?';
+
+    db.query(query, [email, password], (err, result) => {
+        if (err) {
+            console.error('Error al hacer login:', err);
+            return res.status(500).send('Error en la base de datos');
+        }
+
+        if (result.length > 0) {
+            // Usuario encontrado: login exitoso
+            res.send('Login exitoso');
+        } else {
+            // Usuario no encontrado: pedir crear cuenta
+            res.status(404).send('Usuario no encontrado. Por favor, crea una cuenta nueva.');
+        }
+    });
+});
+
+
 // CREATE TABLE IF NOT EXISTS usuario (
 //     id INT AUTO_INCREMENT PRIMARY KEY,
 //     nombre VARCHAR(255) NOT NULL,
