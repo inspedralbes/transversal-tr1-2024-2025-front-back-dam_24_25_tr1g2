@@ -52,19 +52,42 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { getComandas, deleteComanda } from "../service/communicationManager";  
-import Header from '../components/header.vue'; 
+import Header from '../components/header.vue';
+import { io } from 'socket.io-client'; // Importar socket.io-client
 
 const comandas = ref([]);
 const errorMessage = ref('');
 const selectedComanda = ref(null); // Estado para la comanda seleccionada
 const orderStatus = ref(''); // Estado para el mensaje del pedido
+let socket = null; // Variable para manejar la conexión de socket
 
+// Función para conectar al servidor de Socket.io
+const connectSocket = () => {
+    socket = io("http://localhost:3001"); // Conectar a tu servidor de Socket.io
+
+    // Escuchar el evento 'nuevaCompra' que será emitido por el servidor
+    socket.on('nuevaCompra', (nuevoPedido) => {
+        console.log("Nueva compra recibida:", nuevoPedido);
+        comandas.value.push(nuevoPedido); // Agregar la nueva comanda a la lista de comandas
+    });
+};
+
+// Cargar las comandas al montar el componente
 onMounted(async () => {
     await fetchComandas();
+    connectSocket(); // Establecer la conexión con el servidor Socket.io
 });
 
+// Limpiar la conexión al desmontar el componente
+onBeforeUnmount(() => {
+    if (socket) {
+        socket.disconnect(); // Desconectar el socket al desmontar el componente
+    }
+});
+
+// Función para obtener las comandas desde el servidor
 const fetchComandas = async () => {
     try {
         comandas.value = await getComandas();
@@ -95,7 +118,6 @@ const handleDelete = async (id) => {
     }
 };
 </script>
-
 
 <style scoped>
 h1 {

@@ -2,21 +2,29 @@ const express = require('express');
 const mysql = require('mysql2');
 const fs = require('fs');
 const cors = require('cors');
-const app = express();
 const multer = require('multer');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 
+const app = express();
 const port = 3001;
-// const port = 23459;
 
-// Middleware para permitir el parsing de JSON en los requests
+// Configuración del servidor HTTP y socket.io
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Middleware para el parsing de JSON y CORS
 app.use(express.json({ limit: '200mb' }));
-
-app.use(express.json());
 app.use(cors());
-
 app.use('/imagen', express.static(path.join(__dirname, 'public/imagen')));
 
+// Configuración de multer para guardar imágenes
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/imagen');
@@ -27,9 +35,9 @@ const storage = multer.diskStorage({
         cb(null, uniqueSuffix + extension);
     }
 });
-
 const upload = multer({ storage: storage });
 
+// Configuración de la conexión a la base de datos
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -169,9 +177,16 @@ db.connect((err) => {
     });
 });
 
+// Configuración de socket.io para gestionar nuevas conexiones
+io.on('connection', (socket) => {
+    console.log('Nuevo cliente conectado');
 
+    socket.on('disconnect', () => {
+        console.log('Cliente desconectado');
+    });
+});
 
-
+// Rutas de la API
 app.post('/addProducto', upload.single('imagen'), (req, res) => {
     const { producto, precio } = req.body;
     const imagen = req.file ? req.file.filename : null;
@@ -181,115 +196,16 @@ app.post('/addProducto', upload.single('imagen'), (req, res) => {
     }
 
     const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
-
     db.query(insertQuery, [producto, imagen, precio], (err, result) => {
         if (err) {
             console.error('Error al insertar el producto en la base de datos:', err);
             return res.status(500).send('Error al insertar el producto en la base de datos');
         }
-
         res.status(201).json(result.insertId);
     });
 });
 
-
-
-app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
-    const { id } = req.params; // Obtener el id del producto desde la URL
-    const { producto, precio } = req.body; // Datos que vamos a actualizar
-    const imagen = req.file ? req.file.filename : req.body.imagen;
-
-    const updateQuery = `
-        UPDATE productos
-        SET producto = ?, imagen = ?, precio = ?
-        WHERE id = ?
-    `;
-
-    db.query(updateQuery, [producto, imagen, precio, id], (err, result) => {
-        if (err) {
-            console.error('Error al actualizar el producto en la base de datos:', err);
-            return res.status(500).send('Error al actualizar el producto en la base de datos');
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).send('Producto no encontrado en la base de datos');
-        }
-
-        res.send('Producto actualizado con éxito');
-    });
-});
-
-app.delete('/deleteProducto/:id', (req, res) => {
-    const { id } = req.params;
-
-
-    const selectQuery = 'SELECT imagen FROM productos WHERE id = ?';
-
-    db.query(selectQuery, [id], (err, result) => {
-        if (err) {
-            console.error('Error al consultar el producto en la base de datos:', err);
-            return res.status(500).json({ error: 'Error al consultar el producto en la base de datos' });
-        }
-
-        if (result.length === 0) {
-            return res.status(404).json({ error: 'Producto no encontrado en la base de datos' });
-        }
-
-        const imagen = result[0].imagen;
-
-        const deleteQuery = 'DELETE FROM productos WHERE id = ?';
-
-        db.query(deleteQuery, [id], (err, result) => {
-            if (err) {
-                console.error('Error al eliminar el producto en la base de datos:', err);
-                return res.status(500).json({ error: 'Error al eliminar el producto en la base de datos' });
-            }
-
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ error: 'Producto no encontrado en la base de datos' });
-            }
-
-            const imagePath = path.join(__dirname, 'public/imagen', imagen);
-
-            fs.unlink(imagePath, (err) => {
-                if (err) {
-                    console.error('Error al eliminar el archivo de imagen:', err);
-                    return res.status(500).json({ error: 'Error al eliminar el archivo de imagen' });
-                }
-
-                db.query('SELECT * FROM productos', (err, productos) => {
-                    if (err) {
-                        console.error('Error al consultar productos para actualizar el archivo JSON:', err);
-                        return res.status(500).json({ error: 'Error al consultar productos' });
-                    }
-
-                    fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
-                        if (err) {
-                            console.error('Error al escribir en el archivo JSON:', err);
-                            return res.status(500).json({ error: 'Error al escribir en el archivo JSON' });
-                        }
-
-                        res.json({ message: 'Producto eliminado con éxito y archivo JSON sincronizado' });
-                    });
-                });
-            });
-        });
-    });
-});
-
-
-app.get('/getProducto', (req, res) => {
-    const query = 'SELECT * FROM productos';
-
-    db.query(query, (err, result) => {
-        if (err) {
-            console.error('Error en la consulta:', err);
-            return res.status(500).send('Error en la consulta a la base de datos');
-        }
-        res.json(result);
-    });
-});
-
+// Registrar compra y emitir evento de nueva compra
 app.post('/registrarCompra', (req, res) => {
     console.log("Datos recibidos en /registrarCompra:", req.body);
     const { usuario_id, detalles, estado, total, fecha_pedido } = req.body[0] || {};
@@ -310,7 +226,29 @@ app.post('/registrarCompra', (req, res) => {
             return res.status(500).send('Error al registrar la compra en la base de datos');
         }
 
+        // Emitir evento a todos los clientes conectados
+        io.emit('nuevaCompra', {
+            id: result.insertId,
+            usuario_id,
+            detalles,
+            estado,
+            total,
+            fecha_pedido
+        });
+
         res.send('Compra registrada con éxito');
+    });
+});
+
+app.get('/getProducto', (req, res) => {
+    const query = 'SELECT * FROM productos';
+
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error en la consulta:', err);
+            return res.status(500).send('Error en la consulta a la base de datos');
+        }
+        res.json(result);
     });
 });
 
@@ -324,58 +262,10 @@ app.get('/getPedidos', (req, res) => {
         }
         res.json(result);
     });
-})
-
-
-
-app.delete('/eliminarCompra/:id', (req, res) => {
-    const { id } = req.params;
-
-    const deletePurchaseQuery = `
-        DELETE FROM pedidos WHERE id = ?
-    `;
-
-    db.query(deletePurchaseQuery, [id], (err, result) => {
-        if (err) {
-            console.error('Error al eliminar la compra en la base de datos:', err);
-            return res.status(500).json({ error: 'Error al eliminar la compra en la base de datos' });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Compra no encontrada' });
-        }
-
-        res.json({ message: 'Compra eliminada con éxito' });
-    });
 });
 
-app.put('/actualizarCompra/:id', (req, res) => {
-    const { id } = req.params;
-    const { estado, detalles } = req.body;
-
-    const updatePurchaseQuery = `
-        UPDATE pedidos
-        SET estado = ?, detalles = ?
-        WHERE id = ?
-    `;
-
-    db.query(updatePurchaseQuery, [estado, detalles, id], (err, result) => {
-        if (err) {
-            console.error('Error al actualizar la compra en la base de datos:', err);
-            return res.status(500).json({ error: 'Error al actualizar la compra en la base de datos' });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Compra no encontrada' });
-        }
-
-        res.json({ message: 'Compra actualizada con éxito' });
-    });
-});
-
-
-
-app.listen(port, () => {
-    // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
+// Iniciar el servidor HTTP y socket.io
+server.listen(port, () => {
     console.log(`Servidor escuchando en http://localhost:${port}`);
+    // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
 });
