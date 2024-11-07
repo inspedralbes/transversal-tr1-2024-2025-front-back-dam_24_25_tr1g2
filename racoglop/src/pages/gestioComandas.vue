@@ -31,7 +31,9 @@
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.total }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.fecha_pedido }}</v-col>
                     <v-col class="text-center">
-                        <v-btn color="primary" @click.stop="changeStatus(comanda)"><v-icon>mdi-refresh</v-icon></v-btn>
+                        <v-btn v-if="comanda.estado !== 'Entregado'" color="primary" @click.stop="changeStatus(comanda)">
+                            <v-icon>mdi-refresh</v-icon>
+                        </v-btn>
                         <v-btn color="error" @click.stop="handleDelete(comanda.id)"><v-icon>mdi-delete</v-icon></v-btn>
                     </v-col>
                 </v-row>
@@ -118,18 +120,30 @@ const handleDelete = async (id) => {
     }
 };
 
+const updateComandaStatus = async (comandaId, nuevoEstado) => {
+    // Aquí se simula la actualización del estado en el servidor
+    let comanda = comandas.value.find(c => c.id === comandaId);
+    if (comanda) {
+        comanda.estado = nuevoEstado;
+    }
+    return comanda; // Devuelves la comanda actualizada
+};
 
 const changeStatus = async (comanda) => {
     try {
-        const nuevoEstado = comanda.estado === 'Enviado' ? 'En proceso' : 'Enviado';
+        const estados = ['Recibido', 'En proceso', 'Enviado', 'En reparto', 'Entregado'];
+        
+        const currentIndex = estados.indexOf(comanda.estado);
+        const nextIndex = (currentIndex + 1) % estados.length; // Cálculo cíclico
+        const nuevoEstado = estados[nextIndex];
+
         console.log("Nuevo estado:", nuevoEstado);
 
         const comandaActualizada = await updateComandaStatus(comanda.id, nuevoEstado);
         console.log("Comanda actualizada:", comandaActualizada);
 
-        // Emitir la actualización del estado a través de socket si está conectado.
-        if (socket.value) {
-            socket.value.emit('actualizarEstado', comandaActualizada);
+        if (socket) {
+            socket.emit('actualizarEstado', comandaActualizada);
             console.log("Evento 'actualizarEstado' emitido");
         }
     } catch (error) {

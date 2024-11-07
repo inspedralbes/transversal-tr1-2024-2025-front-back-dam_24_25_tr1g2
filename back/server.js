@@ -268,8 +268,10 @@ app.patch('/updateEstadoPedido/:id', (req, res) => {
     const pedidoId = req.params.id;
     const { estado } = req.body;
 
-    if (!estado) {
-        return res.status(400).send('Estado no especificado');
+    const estadosPermitidos = ['Recibido', 'En proceso', 'Enviado', 'En reparto'];
+
+    if (!estadosPermitidos.includes(estado)) {
+        return res.status(400).send('Estado no permitido');
     }
 
     const updateQuery = 'UPDATE pedidos SET estado = ? WHERE id = ?';
@@ -278,11 +280,13 @@ app.patch('/updateEstadoPedido/:id', (req, res) => {
             console.error('Error al actualizar el estado en la base de datos:', err);
             return res.status(500).send('Error al actualizar el estado en la base de datos');
         }
-        
-        io.emit('estadoActualizado', { id: pedidoId, estado }); // Emitir el evento para actualizar a otros clientes.
+
+        // Emitir el evento de actualización del estado a los clientes
+        io.emit('estadoActualizado', { id: pedidoId, estado });
         res.send('Estado actualizado con éxito');
     });
 });
+
 
 
 app.delete('/eliminarCompra/:id', (req, res) => {
