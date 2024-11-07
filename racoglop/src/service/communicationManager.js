@@ -97,6 +97,27 @@ export const deleteComanda = async (id) => {
     }
 };
 
+export const updateComandaStatus = async (comandaId, nuevoEstado) => {
+    try {
+        const response = await fetch(`http://localhost:3001/updateEstadoPedido/${comandaId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ estado: nuevoEstado }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Error en la actualización del estado');
+        }
+        
+        return await response.json(); // Devuelve la comanda actualizada
+    } catch (error) {
+        console.error("Error en updateComandaStatus", error);
+        throw error;
+    }
+};
+
 export const updateComanda = async (comanda) => {
     try {
         const response = await fetch(`${ruta}/actualizarCompra/${comanda.id}`, {

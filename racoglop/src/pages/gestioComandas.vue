@@ -31,6 +31,9 @@
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.total }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.fecha_pedido }}</v-col>
                     <v-col class="text-center">
+                        <v-btn v-if="comanda.estado !== 'Entregado'" color="primary" @click.stop="changeStatus(comanda)">
+                            <v-icon>mdi-refresh</v-icon>
+                        </v-btn>
                         <v-btn color="error" @click.stop="handleDelete(comanda.id)"><v-icon>mdi-delete</v-icon></v-btn>
                     </v-col>
                 </v-row>
@@ -39,7 +42,7 @@
                 <v-row v-if="selectedComanda" class="status-message mt-3" no-gutters>
                     <v-col>
                         <h3>Estado del Pedido (ID: {{ selectedComanda.id }}):</h3>
-                        <p>{{ orderStatus }}</p>
+                        <p>{{ selectedComanda.estado }}</p>
                         <p>Fecha de Pedido: {{ selectedComanda.fecha_pedido }}</p>
                         <p>Dirección del Usuario : {{ users[selectedComanda.usuario_id]?.direccion || 'Dirección desconocida' }}</p>
                     </v-col>
@@ -50,14 +53,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { getComandas, deleteComanda, getUsuarios } from "../service/communicationManager";  
-import Header from '../components/header.vue'; 
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { getComandas, deleteComanda } from "../service/communicationManager";  
+import Header from '../components/header.vue';
+import { io } from 'socket.io-client'; // Importar socket.io-client
 
 const comandas = ref([]);
 const errorMessage = ref('');
 const selectedComanda = ref(null); // Estado para la comanda seleccionada
 const orderStatus = ref(''); // Estado para el mensaje del pedido
+let socket = null; // Variable para manejar la conexión de socket
+
+// Función para conectar al servidor de Socket.io
+const connectSocket = () => {
+    socket = io("http://localhost:3001"); // Conectar a tu servidor de Socket.io
+
+    // Escuchar el evento 'nuevaCompra' que será emitido por el servidor
+    socket.on('nuevaCompra', (nuevoPedido) => {
+        console.log("Nueva compra recibida:", nuevoPedido);
+        comandas.value.push(nuevoPedido); // Agregar la nueva comanda a la lista de comandas
+    });
+};
+
+// Cargar las comandas al montar el componente
 const users = ref({});
 
 onMounted(async () => {
@@ -78,6 +96,17 @@ const fetchUsuarios = async () => {
     }
 };
 
+    connectSocket(); // Establecer la conexión con el servidor Socket.io
+});
+
+// Limpiar la conexión al desmontar el componente
+onBeforeUnmount(() => {
+    if (socket) {
+        socket.disconnect(); // Desconectar el socket al desmontar el componente
+    }
+});
+
+// Función para obtener las comandas desde el servidor
 const fetchComandas = async () => {
     try {
         comandas.value = await getComandas();
@@ -90,7 +119,6 @@ const fetchComandas = async () => {
 // Método para manejar la selección de una comanda
 const selectComanda = (comanda) => {
     selectedComanda.value = selectedComanda.value?.id === comanda.id ? null : comanda;
-    orderStatus.value = "Enviado"; // Cambiar según la lógica deseada
 };
 
 // Método para eliminar una comanda
@@ -107,6 +135,40 @@ const handleDelete = async (id) => {
         console.error("Error en el delete", error);
     }
 };
+
+const updateComandaStatus = async (comandaId, nuevoEstado) => {
+    // Aquí se simula la actualización del estado en el servidor
+    let comanda = comandas.value.find(c => c.id === comandaId);
+    if (comanda) {
+        comanda.estado = nuevoEstado;
+    }
+    return comanda; // Devuelves la comanda actualizada
+};
+
+const changeStatus = async (comanda) => {
+    try {
+        const estados = ['Recibido', 'En proceso', 'Enviado', 'En reparto', 'Entregado'];
+        
+        const currentIndex = estados.indexOf(comanda.estado);
+        const nextIndex = (currentIndex + 1) % estados.length; // Cálculo cíclico
+        const nuevoEstado = estados[nextIndex];
+
+        console.log("Nuevo estado:", nuevoEstado);
+
+        const comandaActualizada = await updateComandaStatus(comanda.id, nuevoEstado);
+        console.log("Comanda actualizada:", comandaActualizada);
+
+        if (socket) {
+            socket.emit('actualizarEstado', comandaActualizada);
+            console.log("Evento 'actualizarEstado' emitido");
+        }
+    } catch (error) {
+        errorMessage.value = 'Error al cambiar el estado de la comanda';
+        console.error("Error en changeStatus", error);
+    }
+};
+
+
 </script>
 
 <style scoped>
