@@ -35,7 +35,7 @@ const db = mysql.createConnection({
     user: 'root',
     password: '',
     database: 'tr1_g2-alcohol',
-    connectTimeout: 10000 
+    connectTimeout: 10000
 });
 
 // const db = mysql.createConnection({
@@ -66,7 +66,7 @@ db.connect((err) => {
     ) ENGINE=InnoDB;
 `;
 
-    db.query(createUsuariosTableQuery , (err) => {
+    db.query(createUsuariosTableQuery, (err) => {
         if (err) {
             console.error('Error al crear la tabla usuarios:', err);
             return;
@@ -373,31 +373,37 @@ app.put('/actualizarCompra/:id', (req, res) => {
     });
 });
 
-app.post('/registrar', (req, res) => {
+app.post('/register', (req, res) => {
     console.log("Datos en /registrar:", req.body);
-    const { id, nombre, apellido, email, password, direccion } = req.body[0] || {};
-    if (!id || !nombre || !apellido || !email || !password || !direccion) {
-        console.error("Datos incompletos para registrarse:", req.body[0]);
+    // const { nombre, apellido, email, password, direccion } = req.body;
+    
+    const { email, password } = req.body;
+    const nombre = 'nombre';
+    const apellido = 'apellido';
+    const direccion = 'direccion';
+    if (!nombre || !apellido || !email || !password || !direccion) {
+        console.error("Datos incompletos para registrarse:", req.body);
         return res.status(400).send('Datos incompletos para registrar');
     }
     const insertUser = `
-    INSERT INTO usuario (id, nombre, apellido, email, password, direccion)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO usuario (nombre, apellido, email, password, direccion)
+    VALUES (?, ?, ?, ?, ?)
 `;
 
-db.query(insertUser, [id, nombre, apellido, email, password, direccion], (err, result) => {
-    if (err) {
-        console.error('Error al registrarse:', err);
-        return res.status(500).send('Error al registrar en la base de datos');
-    }
+    db.query(insertUser, [nombre, apellido, email, password, direccion], (err, result) => {
+        if (err) {
+            console.error('Error al registrarse:', err);
+            return res.status(500).send('Error al registrar en la base de datos');
+        }
 
-    res.send('Registro existoso');
-});
+        res.send('Registro existoso');
+    });
 });
 
 app.post('/login', (req, res) => {
     // Accedemos al primer objeto del array en lugar de req.body directamente
-    const { email, password } = req.body[0] || {};
+    console.log("Datos en /login:", req.body);
+    const { email, password } = req.body;
 
     // Verificar que se envíen ambos campos
     if (!email || !password) {
