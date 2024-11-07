@@ -31,6 +31,7 @@
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.total }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.fecha_pedido }}</v-col>
                     <v-col class="text-center">
+                        <v-btn color="primary" @click.stop="changeStatus(comanda)"><v-icon>mdi-refresh</v-icon></v-btn>
                         <v-btn color="error" @click.stop="handleDelete(comanda.id)"><v-icon>mdi-delete</v-icon></v-btn>
                     </v-col>
                 </v-row>
@@ -39,7 +40,7 @@
                 <v-row v-if="selectedComanda" class="status-message mt-3" no-gutters>
                     <v-col>
                         <h3>Estado del Pedido (ID: {{ selectedComanda.id }}):</h3>
-                        <p>{{ orderStatus }}</p>
+                        <p>{{ selectedComanda.estado }}</p>
                         <p>Fecha de Pedido: {{ selectedComanda.fecha_pedido }}</p>
                     </v-col>
                 </v-row>
@@ -100,7 +101,6 @@ const fetchComandas = async () => {
 // Método para manejar la selección de una comanda
 const selectComanda = (comanda) => {
     selectedComanda.value = selectedComanda.value?.id === comanda.id ? null : comanda;
-    orderStatus.value = "Enviado"; // Cambiar según la lógica deseada
 };
 
 // Método para eliminar una comanda
@@ -117,6 +117,28 @@ const handleDelete = async (id) => {
         console.error("Error en el delete", error);
     }
 };
+
+
+const changeStatus = async (comanda) => {
+    try {
+        const nuevoEstado = comanda.estado === 'Enviado' ? 'En proceso' : 'Enviado';
+        console.log("Nuevo estado:", nuevoEstado);
+
+        const comandaActualizada = await updateComandaStatus(comanda.id, nuevoEstado);
+        console.log("Comanda actualizada:", comandaActualizada);
+
+        // Emitir la actualización del estado a través de socket si está conectado.
+        if (socket.value) {
+            socket.value.emit('actualizarEstado', comandaActualizada);
+            console.log("Evento 'actualizarEstado' emitido");
+        }
+    } catch (error) {
+        errorMessage.value = 'Error al cambiar el estado de la comanda';
+        console.error("Error en changeStatus", error);
+    }
+};
+
+
 </script>
 
 <style scoped>

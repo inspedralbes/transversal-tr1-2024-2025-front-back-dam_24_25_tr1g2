@@ -264,6 +264,41 @@ app.get('/getPedidos', (req, res) => {
     });
 });
 
+app.patch('/updateEstadoPedido/:id', (req, res) => {
+    const pedidoId = req.params.id;
+    const { estado } = req.body;
+
+    if (!estado) {
+        return res.status(400).send('Estado no especificado');
+    }
+
+    const updateQuery = 'UPDATE pedidos SET estado = ? WHERE id = ?';
+    db.query(updateQuery, [estado, pedidoId], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el estado en la base de datos:', err);
+            return res.status(500).send('Error al actualizar el estado en la base de datos');
+        }
+        
+        io.emit('estadoActualizado', { id: pedidoId, estado }); // Emitir el evento para actualizar a otros clientes.
+        res.send('Estado actualizado con éxito');
+    });
+});
+
+
+app.delete('/eliminarCompra/:id', (req, res) => {
+    const id = req.params.id;
+    const deleteQuery = 'DELETE FROM pedidos WHERE id = ?';
+    db.query(deleteQuery, [id], (err, result) => {
+        if (err) {
+            console.error('Error al eliminar la comanda:', err);
+            return res.status(500).send('Error al eliminar la comanda');
+        }
+        res.send({ message: 'Comanda eliminada con éxito' });
+    });
+});
+
+
+
 // Iniciar el servidor HTTP y socket.io
 server.listen(port, () => {
     console.log(`Servidor escuchando en http://localhost:${port}`);
