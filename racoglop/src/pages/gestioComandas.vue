@@ -54,7 +54,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { getComandas, deleteComanda } from "../service/communicationManager";  
+import { getComandas, deleteComanda, getUsuarios } from "../service/communicationManager";  
 import Header from '../components/header.vue';
 import { io } from 'socket.io-client'; // Importar socket.io-client
 
@@ -81,6 +81,7 @@ const users = ref({});
 onMounted(async () => {
     await fetchComandas();
     await fetchUsuarios();
+    connectSocket()
 });
 
 const fetchUsuarios = async () => {
@@ -96,8 +97,7 @@ const fetchUsuarios = async () => {
     }
 };
 
-    connectSocket(); // Establecer la conexión con el servidor Socket.io
-});
+    ; // Establecer la conexión con el servidor Socket.io
 
 // Limpiar la conexión al desmontar el componente
 onBeforeUnmount(() => {
