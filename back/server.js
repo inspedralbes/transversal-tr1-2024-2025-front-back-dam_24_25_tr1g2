@@ -183,6 +183,28 @@ db.connect((err) => {
 io.on('connection', (socket) => {
     console.log('Nuevo cliente conectado');
 
+    socket.on('actualizarEstado', (comandaActualizada) => {
+        const { id, estado } = comandaActualizada;
+        const estadosPermitidos = ['Recibido', 'En proceso', 'Enviado', 'En reparto', 'Entregado'];
+
+        if (!estadosPermitidos.includes(estado)) {
+            console.error('Estado no permitido:', estado);
+            return;
+        }
+
+        const updateQuery = 'UPDATE pedidos SET estado = ? WHERE id = ?';
+        db.query(updateQuery, [estado, id], (err, result) => {
+            if (err) {
+                console.error('Error al actualizar el estado en la base de datos:', err);
+                return;
+            }
+
+            console.log('Estado actualizado con éxito:', comandaActualizada);
+            // Emitir el evento de actualización del estado a los clientes
+            io.emit('estadoActualizado', { id, estado });
+        });
+    });
+    
     socket.on('disconnect', () => {
         console.log('Cliente desconectado');
     });

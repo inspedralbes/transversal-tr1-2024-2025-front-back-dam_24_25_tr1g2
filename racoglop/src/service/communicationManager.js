@@ -99,7 +99,7 @@ export const deleteComanda = async (id) => {
 
 export const updateComandaStatus = async (comandaId, nuevoEstado) => {
     try {
-        const response = await fetch(`http://localhost:3001/updateEstadoPedido/${comandaId}`, {
+        const response = await fetch(`${ruta}/updateEstadoPedido/${comandaId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
