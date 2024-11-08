@@ -74,7 +74,7 @@ import { io } from 'socket.io-client';
 const comandas = ref([]);
 const errorMessage = ref('');
 const selectedComanda = ref(null);
-const filtroEstado = ref('Todos'); // Estado para el filtro de estado
+const filtroEstado = ref('Tots'); // Estado para el filtro de estado
 let socket = null;
 
 const connectSocket = () => {
