@@ -4,37 +4,50 @@
 
         <v-container>
             <v-card class="my-4" elevation="3">
-                <v-card-title class="justify-center">
-                    <h1>Gestión de Comandas</h1>
+                <v-card-title class="d-flex justify-space-between align-center">
+                    <h1>Gestió de Comandes</h1>
+                    
+                    <!-- Botón de filtro alineado a la derecha -->
+                    <v-select
+                        v-model="filtroEstado"
+                        :items="['Tots', 'Rebut', 'En procés', 'Enviat', 'En repartiment', 'Entregat']"
+                        label="Filtrar per Estat"
+                        @change="aplicarFiltro"
+                        class="ml-4"
+                        style="max-width: 200px;"
+                    ></v-select>
                 </v-card-title>
 
                 <v-divider></v-divider>
 
+                <!-- Encabezados de columnas -->
                 <v-row class="text-center font-weight-bold py-2" align="center" no-gutters>
-                    <v-col class="text-center">Pedido ID</v-col>
-                    <v-col class="text-center">Usuario</v-col>
-                    <v-col class="text-center">Estado</v-col>
-                    <v-col class="text-center">Detalles</v-col>
+                    <v-col class="text-center">ID Comanda</v-col>
+                    <v-col class="text-center">Usuari</v-col>
+                    <v-col class="text-center">Estat</v-col>
+                    <v-col class="text-center">Detalls</v-col>
                     <v-col class="text-center">Total (€)</v-col>
-                    <v-col class="text-center">Fecha Pedido</v-col>
-                    <v-col class="text-center">Acciones</v-col>
+                    <v-col class="text-center">Data comanda</v-col>
+                    <v-col class="text-center">Accions</v-col>
                 </v-row>
 
                 <v-divider></v-divider>
 
-                <!-- Mostrar todas las comandas si no hay ninguna seleccionada -->
-                <v-row v-for="comanda in comandas" :key="comanda.id" class="comanda-row" no-gutters>
+                <!-- Mostrar todas las comandas o aplicar filtro -->
+                <v-row v-for="comanda in comandasFiltradas" :key="comanda.id" class="comanda-row" no-gutters>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.id }}</v-col>
-                    <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ users[comanda.usuario_id]?.nombre || 'Usuario desconocido' }}</v-col>
+                    <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ users[comanda.usuario_id]?.nombre || 'Usuari desconegut' }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.estado }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.detalles }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.total }}</v-col>
                     <v-col class="text-center py-2" @click="selectComanda(comanda)">{{ comanda.fecha_pedido }}</v-col>
                     <v-col class="text-center">
-                        <v-btn v-if="comanda.estado !== 'Entregado'" color="primary" @click.stop="changeStatus(comanda)">
+                        <v-btn v-if="comanda.estado !== 'Entregat'" color="primary" @click.stop="changeStatus(comanda)">
                             <v-icon>mdi-refresh</v-icon>
                         </v-btn>
-                        <v-btn color="error" @click.stop="handleDelete(comanda.id)"><v-icon>mdi-delete</v-icon></v-btn>
+                        <v-btn color="error" @click.stop="handleDelete(comanda.id)">
+                            <v-icon>mdi-delete</v-icon>
+                        </v-btn>
                     </v-col>
                 </v-row>
 
@@ -44,7 +57,7 @@
                         <h3>Estado del Pedido (ID: {{ selectedComanda.id }}):</h3>
                         <p>{{ selectedComanda.estado }}</p>
                         <p>Fecha de Pedido: {{ selectedComanda.fecha_pedido }}</p>
-                        <p>Dirección del Usuario : {{ users[selectedComanda.usuario_id]?.direccion || 'Dirección desconocida' }}</p>
+                        <p>Dirección del Usuario: {{ users[selectedComanda.usuario_id]?.direccion || 'Dirección desconocida' }}</p>
                     </v-col>
                 </v-row>
             </v-card>
@@ -53,35 +66,32 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { getComandas, deleteComanda, getUsuarios } from "../service/communicationManager";  
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { getComandas, deleteComanda, getUsuarios } from "../service/communicationManager";
 import Header from '../components/header.vue';
-import { io } from 'socket.io-client'; // Importar socket.io-client
+import { io } from 'socket.io-client';
 
 const comandas = ref([]);
 const errorMessage = ref('');
-const selectedComanda = ref(null); // Estado para la comanda seleccionada
-const orderStatus = ref(''); // Estado para el mensaje del pedido
-let socket = null; // Variable para manejar la conexión de socket
+const selectedComanda = ref(null);
+const filtroEstado = ref('Todos'); // Estado para el filtro de estado
+let socket = null;
 
-// Función para conectar al servidor de Socket.io
 const connectSocket = () => {
-    socket = io("http://localhost:3001"); // Conectar a tu servidor de Socket.io
+    socket = io("http://localhost:3001");
 
-    // Escuchar el evento 'nuevaCompra' que será emitido por el servidor
     socket.on('nuevaCompra', (nuevoPedido) => {
         console.log("Nueva compra recibida:", nuevoPedido);
-        comandas.value.push(nuevoPedido); // Agregar la nueva comanda a la lista de comandas
+        comandas.value.push(nuevoPedido);
     });
 };
 
-// Cargar las comandas al montar el componente
 const users = ref({});
 
 onMounted(async () => {
     await fetchComandas();
     await fetchUsuarios();
-    connectSocket()
+    connectSocket();
 });
 
 const fetchUsuarios = async () => {
@@ -97,16 +107,12 @@ const fetchUsuarios = async () => {
     }
 };
 
-    ; // Establecer la conexión con el servidor Socket.io
-
-// Limpiar la conexión al desmontar el componente
 onBeforeUnmount(() => {
     if (socket) {
-        socket.disconnect(); // Desconectar el socket al desmontar el componente
+        socket.disconnect();
     }
 });
 
-// Función para obtener las comandas desde el servidor
 const fetchComandas = async () => {
     try {
         comandas.value = await getComandas();
@@ -116,12 +122,10 @@ const fetchComandas = async () => {
     }
 };
 
-// Método para manejar la selección de una comanda
 const selectComanda = (comanda) => {
     selectedComanda.value = selectedComanda.value?.id === comanda.id ? null : comanda;
 };
 
-// Método para eliminar una comanda
 const handleDelete = async (id) => {
     try {
         const response = await deleteComanda(id);
@@ -137,30 +141,25 @@ const handleDelete = async (id) => {
 };
 
 const updateComandaStatus = async (comandaId, nuevoEstado) => {
-    // Aquí se simula la actualización del estado en el servidor
     let comanda = comandas.value.find(c => c.id === comandaId);
     if (comanda) {
         comanda.estado = nuevoEstado;
     }
-    return comanda; // Devuelves la comanda actualizada
+    return comanda;
 };
 
 const changeStatus = async (comanda) => {
     try {
-        const estados = ['Recibido', 'En proceso', 'Enviado', 'En reparto', 'Entregado'];
+        const estados = ['Rebut', 'En procés', 'Enviat', 'En repartiment', 'Entregat'];
         
         const currentIndex = estados.indexOf(comanda.estado);
-        const nextIndex = (currentIndex + 1) % estados.length; // Cálculo cíclico
+        const nextIndex = (currentIndex + 1) % estados.length;
         const nuevoEstado = estados[nextIndex];
 
-        console.log("Nuevo estado:", nuevoEstado);
-
         const comandaActualizada = await updateComandaStatus(comanda.id, nuevoEstado);
-        console.log("Comanda actualizada:", comandaActualizada);
 
         if (socket) {
             socket.emit('actualizarEstado', comandaActualizada);
-            console.log("Evento 'actualizarEstado' emitido");
         }
     } catch (error) {
         errorMessage.value = 'Error al cambiar el estado de la comanda';
@@ -168,13 +167,18 @@ const changeStatus = async (comanda) => {
     }
 };
 
-
+// Computed para aplicar el filtro
+const comandasFiltradas = computed(() => {
+    return filtroEstado.value === 'Todos'
+        ? comandas.value
+        : comandas.value.filter(comanda => comanda.estado === filtroEstado.value);
+});
 </script>
 
 <style scoped>
 h1 {
     margin: 0;
-    color: white; 
+    color: white;
 }
 
 .v-card {
@@ -184,7 +188,6 @@ h1 {
     background-color: #333;
 }
 
-/* Estilos para contenedores y filas */
 .comanda-row {
     background-color: #555;
     color: white;
@@ -192,17 +195,11 @@ h1 {
     cursor: pointer;
 }
 
-.comanda-item {
-    flex: 1;
-    text-align: center;
-}
-
-/* Estilo para el estado del pedido */
 .status-message {
     margin-top: 20px;
     color: white;
     text-align: center;
-    background-color: #444; 
+    background-color: #444;
     padding: 10px;
     border-radius: 5px;
 }
