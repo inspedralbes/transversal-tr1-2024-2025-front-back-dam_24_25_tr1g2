@@ -115,7 +115,6 @@ const submitForm = async () => {
             response = await addProducto(formData);
         }
 
-        // Imprimir la respuesta para depuración
         console.log('Response from server:', response);
         closeDialog();
     } catch (error) {

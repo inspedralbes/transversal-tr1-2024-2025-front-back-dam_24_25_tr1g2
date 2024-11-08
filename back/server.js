@@ -9,6 +9,7 @@ const { Server } = require('socket.io');
 
 const app = express();
 const port = 3001;
+// const port = 23459;
 
 // Configuración del servidor HTTP y socket.io
 const server = http.createServer(app);
@@ -48,12 +49,10 @@ const db = mysql.createConnection({
 
 // const db = mysql.createConnection({
 //     host: 'dam.inspedralbes.cat',
-//     user: 'a23hashusraf_tr1-g2', 
+//     user: 'a23hashusraf_tr1-g2',
 //     password: 'InsPedralbes2024',
 //     database: 'a23hashusraf_tr1-g2',
 //     waitForConnections: true,
-//     connectionLimit: 10,
-//     queueLimit: 0
 // });
 
 db.connect((err) => {
@@ -203,7 +202,7 @@ io.on('connection', (socket) => {
             io.emit('estadoActualizado', { id, estado });
         });
     });
-    
+
     socket.on('disconnect', () => {
         console.log('Cliente desconectado');
     });
@@ -416,6 +415,84 @@ app.get('/getUsuarios', (req, res) => {
 });
 
 
+app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
+    const { id } = req.params; // Obtener el id del producto desde la URL
+    const { producto, precio } = req.body; // Datos que vamos a actualizar
+    const imagen = req.file ? req.file.filename : req.body.imagen;
+
+    const updateQuery = 'UPDATE productos SET producto = ?, imagen = ?, precio = ? WHERE id = ?';
+
+    db.query(updateQuery, [producto, imagen, precio, id], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el producto en la base de datos:', err);
+            return res.status(500).send('Error al actualizar el producto en la base de datos');
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Producto no encontrado en la base de datos');
+        }
+
+        res.send('Producto actualizado con éxito');
+    });
+});
+
+app.delete('/deleteProducto/:id', (req, res) => {
+    const { id } = req.params;
+
+
+    const selectQuery = 'SELECT imagen FROM productos WHERE id = ?';
+
+    db.query(selectQuery, [id], (err, result) => {
+        if (err) {
+            console.error('Error al consultar el producto en la base de datos:', err);
+            return res.status(500).json({ error: 'Error al consultar el producto en la base de datos' });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ error: 'Producto no encontrado en la base de datos' });
+        }
+
+        const imagen = result[0].imagen;
+
+        const deleteQuery = 'DELETE FROM productos WHERE id = ?';
+
+        db.query(deleteQuery, [id], (err, result) => {
+            if (err) {
+                console.error('Error al eliminar el producto en la base de datos:', err);
+                return res.status(500).json({ error: 'Error al eliminar el producto en la base de datos' });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Producto no encontrado en la base de datos' });
+            }
+
+            const imagePath = path.join(__dirname, 'public/imagen', imagen);
+
+            fs.unlink(imagePath, (err) => {
+                if (err) {
+                    console.error('Error al eliminar el archivo de imagen:', err);
+                    return res.status(500).json({ error: 'Error al eliminar el archivo de imagen' });
+                }
+
+                db.query('SELECT * FROM productos', (err, productos) => {
+                    if (err) {
+                        console.error('Error al consultar productos para actualizar el archivo JSON:', err);
+                        return res.status(500).json({ error: 'Error al consultar productos' });
+                    }
+
+                    fs.writeFile('productos.json', JSON.stringify({ productos }, null, 2), 'utf8', (err) => {
+                        if (err) {
+                            console.error('Error al escribir en el archivo JSON:', err);
+                            return res.status(500).json({ error: 'Error al escribir en el archivo JSON' });
+                        }
+
+                        res.json({ message: 'Producto eliminado con éxito y archivo JSON sincronizado' });
+                    });
+                });
+            });
+        });
+    });
+});
 // Iniciar el servidor HTTP y socket.io
 server.listen(port, () => {
     console.log(`Servidor escuchando en http://localhost:${port}`);

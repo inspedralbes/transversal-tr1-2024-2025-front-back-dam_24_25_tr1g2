@@ -54,7 +54,7 @@ export const updateProducto = async (id, formData) => {
         if (!response.ok) {
             throw new Error('Error al actualizar el producto');
         }
-        return await response.json(); // Retornar la respuesta en JSON
+        return await response.text(); // Retornar la respuesta en JSON
     } catch (error) {
         console.error('Error updating product:', error);
         throw error;
