@@ -10,7 +10,7 @@
                     <!-- Botón de filtro alineado a la derecha -->
                     <v-select
                         v-model="filtroEstado"
-                        :items="['Tots', 'Rebut', 'En procés', 'Enviat', 'En repartiment', 'Entregat']"
+                        :items="['Tots', 'Rebut', 'En proces', 'Enviat', 'En repartiment', 'Entregat']"
                         label="Filtrar per Estat"
                         @change="aplicarFiltro"
                         class="ml-4"
@@ -150,7 +150,7 @@ const updateComandaStatus = async (comandaId, nuevoEstado) => {
 
 const changeStatus = async (comanda) => {
     try {
-        const estados = ['Rebut', 'En procés', 'Enviat', 'En repartiment', 'Entregat'];
+        const estados = ['Rebut', 'En proces', 'Enviat', 'En repartiment', 'Entregat'];
         
         const currentIndex = estados.indexOf(comanda.estado);
         const nextIndex = (currentIndex + 1) % estados.length;
@@ -169,7 +169,7 @@ const changeStatus = async (comanda) => {
 
 // Computed para aplicar el filtro
 const comandasFiltradas = computed(() => {
-    return filtroEstado.value === 'Todos'
+    return filtroEstado.value === 'Tots'
         ? comandas.value
         : comandas.value.filter(comanda => comanda.estado === filtroEstado.value);
 });
