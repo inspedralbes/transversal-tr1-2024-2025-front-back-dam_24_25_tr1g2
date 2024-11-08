@@ -67,7 +67,6 @@ db.connect((err) => {
     CREATE TABLE IF NOT EXISTS usuario (
         id INT AUTO_INCREMENT PRIMARY KEY,
         nombre VARCHAR(255) NOT NULL,
-        apellido VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         direccion VARCHAR(255) NOT NULL
@@ -327,22 +326,20 @@ app.delete('/eliminarCompra/:id', (req, res) => {
 
 app.post('/register', (req, res) => {
     console.log("Datos en /registrar:", req.body);
-    // const { nombre, apellido, email, password, direccion } = req.body;
+    // const { nombre, email, password, direccion } = req.body;
     
-    const { email, password } = req.body;
-    const nombre = 'nombre';
-    const apellido = 'apellido';
-    const direccion = 'direccion';
-    if (!nombre || !apellido || !email || !password || !direccion) {
+    const {nombre, email, password, direccion } = req.body;
+    
+    if (!nombre ||  !email || !password || !direccion) {
         console.error("Datos incompletos para registrarse:", req.body);
         return res.status(400).send('Datos incompletos para registrar');
     }
     const insertUser = `
-    INSERT INTO usuario (nombre, apellido, email, password, direccion)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO usuario (nombre, email, password, direccion)
+    VALUES (?, ?, ?, ?)
 `;
 
-    db.query(insertUser, [nombre, apellido, email, password, direccion], (err, result) => {
+    db.query(insertUser, [nombre, email, password, direccion], (err, result) => {
         if (err) {
             console.error('Error al registrarse:', err);
             return res.status(500).send('Error al registrar en la base de datos');
