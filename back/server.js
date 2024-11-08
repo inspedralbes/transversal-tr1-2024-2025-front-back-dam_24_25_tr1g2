@@ -230,14 +230,20 @@ app.post('/addProducto', upload.single('imagen'), (req, res) => {
 
 // Registrar compra y emitir evento de nueva compra
 app.post('/registrarCompra', (req, res) => {
-    console.log("Datos recibidos en /registrarCompra:", req.body);
-    const { usuario_id, detalles, estado, total, fecha_pedido } = req.body[0] || {};
+    // Verificar si los datos están en un arreglo
+    console.log('Datos recibidos para registrar la compra:', req.body);  // Log para verificar los datos
 
+    // Asegurarse de que los datos recibidos sean un arreglo y extraer el primer elemento
+    const compra = Array.isArray(req.body) ? req.body[0] : req.body;
+
+    const { usuario_id, detalles, estado, total, fecha_pedido } = compra;
+
+    // Validación de los datos
     if (!usuario_id || !detalles || !estado || !total || !fecha_pedido) {
-        console.error("Datos incompletos para registrar la compra:", req.body[0]);
         return res.status(400).send('Datos incompletos para registrar la compra');
     }
 
+    // Consulta para insertar el pedido
     const insertPurchaseQuery = `
         INSERT INTO pedidos (usuario_id, detalles, estado, total, fecha_pedido)
         VALUES (?, ?, ?, ?, ?)
@@ -249,9 +255,9 @@ app.post('/registrarCompra', (req, res) => {
             return res.status(500).send('Error al registrar la compra en la base de datos');
         }
 
-        // Emitir evento a todos los clientes conectados
+        // Emitir evento a los clientes sobre la nueva compra (si estás utilizando socket.io)
         io.emit('nuevaCompra', {
-            id: result.insertId,
+            id: result.insertId,  // El `id` se obtiene automáticamente después de insertar el pedido
             usuario_id,
             detalles,
             estado,
@@ -259,9 +265,12 @@ app.post('/registrarCompra', (req, res) => {
             fecha_pedido
         });
 
+        // Responde al cliente indicando que la compra se registró correctamente
         res.send('Compra registrada con éxito');
     });
 });
+
+
 
 app.get('/getProducto', (req, res) => {
     const query = 'SELECT * FROM productos';
@@ -324,59 +333,74 @@ app.delete('/eliminarCompra/:id', (req, res) => {
     });
 });
 
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
 app.post('/register', (req, res) => {
-    console.log("Datos en /registrar:", req.body);
-    // const { nombre, email, password, direccion } = req.body;
-    
-    const {nombre, email, password, direccion } = req.body;
-    
-    if (!nombre ||  !email || !password || !direccion) {
+    const { nombre, email, password, direccion } = req.body;
+
+    if (!nombre || !email || !password || !direccion) {
         console.error("Datos incompletos para registrarse:", req.body);
         return res.status(400).send('Datos incompletos para registrar');
     }
-    const insertUser = `
-    INSERT INTO usuario (nombre, email, password, direccion)
-    VALUES (?, ?, ?, ?)
-`;
 
-    db.query(insertUser, [nombre, email, password, direccion], (err, result) => {
+    bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
         if (err) {
-            console.error('Error al registrarse:', err);
-            return res.status(500).send('Error al registrar en la base de datos');
+            console.error('Error al encriptar la contraseña:', err);
+            return res.status(500).send('Error al encriptar la contraseña');
         }
 
-        res.send('Registro existoso');
+        const insertUser = `
+        INSERT INTO usuario (nombre, email, password, direccion)
+        VALUES (?, ?, ?, ?)
+    `;
+
+        db.query(insertUser, [nombre, email, hashedPassword, direccion], (err, result) => {
+            if (err) {
+                console.error('Error al registrarse:', err);
+                return res.status(500).send('Error al registrar en la base de datos');
+            }
+            res.send('Registro exitoso');
+        });
     });
 });
 
 app.post('/login', (req, res) => {
-    // Accedemos al primer objeto del array en lugar de req.body directamente
-    console.log("Datos en /login:", req.body);
     const { email, password } = req.body;
 
-    // Verificar que se envíen ambos campos
     if (!email || !password) {
         return res.status(400).send('Faltan datos: email o contraseña no proporcionados');
     }
 
-    // Consulta para verificar si el usuario existe con el email y password proporcionados
-    const query = 'SELECT * FROM usuario WHERE email = ? AND password = ?';
+    const query = 'SELECT id, password FROM usuario WHERE email = ?';
 
-    db.query(query, [email, password], (err, result) => {
+    db.query(query, [email], (err, result) => {
         if (err) {
             console.error('Error al hacer login:', err);
             return res.status(500).send('Error en la base de datos');
         }
 
         if (result.length > 0) {
-            // Usuario encontrado: login exitoso
-            res.send('Login exitoso');
+            // Verificar la contraseña proporcionada con la contraseña almacenada en la base de datos
+            bcrypt.compare(password, result[0].password, (err, isMatch) => {
+                if (err) {
+                    console.error('Error al comparar las contraseñas:', err);
+                    return res.status(500).send('Error al comparar las contraseñas');
+                }
+
+                if (isMatch) {
+                    // Si las contraseñas coinciden, devolver el id del usuario
+                    res.json({ message: 'Login exitoso', userId: result[0].id });
+                } else {
+                    res.status(401).send('Contraseña incorrecta');
+                }
+            });
         } else {
-            // Usuario no encontrado: pedir crear cuenta
             res.status(404).send('Usuario no encontrado. Por favor, crea una cuenta nueva.');
         }
     });
 });
+
 
 
 app.get('/getUsuarios', (req, res) => {
