@@ -1,5 +1,5 @@
-let ruta = 'http://localhost:3001';
-// let ruta = 'http://tr1g2.dam.inspedralbes.cat:23459';
+// let ruta = 'http://localhost:3001';
+let ruta = 'http://tr1g2.dam.inspedralbes.cat:23461';
 
 // Función para obtener las comandas desde el servidor
 export const getComandas = async () => {
@@ -29,16 +29,19 @@ export const getProductos = async () => {
 };
 
 // Funciones para agregar, actualizar y eliminar productos se mantienen igual
-export const addProducto = async (formData) => {
+export const addProducto = async (data) => {
     try {
         const response = await fetch(`${ruta}/addProducto`, {
             method: 'POST',
-            body: formData, // Enviar formData en lugar de JSON
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data),
         });
         if (!response.ok) {
             throw new Error('Error al agregar el producto');
         }
-        return await response.json(); // Retornar la respuesta en JSON
+        return await response.json();
     } catch (error) {
         console.error('Error adding product:', error);
         throw error;
@@ -49,12 +52,12 @@ export const updateProducto = async (id, formData) => {
     try {
         const response = await fetch(`${ruta}/updateProducto/${id}`, {
             method: 'PUT',
-            body: formData, // Enviar formData en lugar de JSON
+            body: formData,
         });
         if (!response.ok) {
             throw new Error('Error al actualizar el producto');
         }
-        return await response.text(); // Retornar la respuesta en JSON
+        return await response.json();
     } catch (error) {
         console.error('Error updating product:', error);
         throw error;

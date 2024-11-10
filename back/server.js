@@ -8,8 +8,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const app = express();
-const port = 3001;
-// const port = 23459;
+// const port = 3001;
+const port = 23461;
 
 // Configuración del servidor HTTP y socket.io
 const server = http.createServer(app);
@@ -39,21 +39,21 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Configuración de la conexión a la base de datos
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'tr1_g2-alcohol',
-    connectTimeout: 10000
-});
-
 // const db = mysql.createConnection({
-//     host: 'dam.inspedralbes.cat',
-//     user: 'a23hashusraf_tr1-g2',
-//     password: 'InsPedralbes2024',
-//     database: 'a23hashusraf_tr1-g2',
-//     waitForConnections: true,
+//     host: 'localhost',
+//     user: 'root',
+//     password: '',
+//     database: 'tr1_g2-alcohol',
+//     connectTimeout: 10000
 // });
+
+const db = mysql.createConnection({
+    host: 'dam.inspedralbes.cat',
+    user: 'a23hashusraf_tr1-g2',
+    password: 'InsPedralbes2024',
+    database: 'a23hashusraf_tr1-g2',
+    waitForConnections: true,
+});
 
 db.connect((err) => {
     if (err) {
@@ -61,6 +61,8 @@ db.connect((err) => {
         return;
     }
     console.log('Conexión exitosa a la base de datos.');
+
+    
 
     const createUsuariosTableQuery = `
     CREATE TABLE IF NOT EXISTS usuario (
@@ -213,9 +215,11 @@ app.post('/addProducto', upload.single('imagen'), (req, res) => {
     const { producto, precio } = req.body;
     const imagen = req.file ? req.file.filename : null;
 
+    console.log('Datos recibidos:', { producto, precio, imagen });
     if (!producto || !imagen || !precio) {
         return res.status(400).send('Faltan datos para agregar el producto');
     }
+
 
     const insertQuery = 'INSERT INTO productos (producto, imagen, precio) VALUES (?, ?, ?)';
     db.query(insertQuery, [producto, imagen, precio], (err, result) => {
@@ -420,16 +424,21 @@ app.put('/updateProducto/:id', upload.single('imagen'), (req, res) => {
     const { producto, precio } = req.body; // Datos que vamos a actualizar
     const imagen = req.file ? req.file.filename : req.body.imagen;
 
-    const updateQuery = 'UPDATE productos SET producto = ?, imagen = ?, precio = ? WHERE id = ?';
+    console.log('Datos recibidos:', { id, producto, precio, imagen });
+
+    const updateQuery = `
+        UPDATE productos
+        SET producto = ?, imagen = ?, precio = ?
+        WHERE id = ?
+    `;
+    if (db.state === 'disconnected') {
+        return res.status(500).send('Error al actualizar el producto en la base de datos: conexión cerrada');
+    }
 
     db.query(updateQuery, [producto, imagen, precio, id], (err, result) => {
         if (err) {
             console.error('Error al actualizar el producto en la base de datos:', err);
             return res.status(500).send('Error al actualizar el producto en la base de datos');
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).send('Producto no encontrado en la base de datos');
         }
 
         res.send('Producto actualizado con éxito');
@@ -495,6 +504,6 @@ app.delete('/deleteProducto/:id', (req, res) => {
 });
 // Iniciar el servidor HTTP y socket.io
 server.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
-    // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
+    // console.log(`Servidor escuchando en http://localhost:${port}`);
+    console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
 });

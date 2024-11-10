@@ -179,6 +179,12 @@
       "producto": "Jack Daniels",
       "imagen": "1730304390351-716354696.jpg",
       "precio": "25.00"
+    },
+    {
+      "id": 34,
+      "producto": "aaaaaaa",
+      "imagen": "Dragon-Ball-meme-ESENCIA.webp",
+      "precio": "12.00"
     }
   ]
 }

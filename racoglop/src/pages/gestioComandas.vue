@@ -78,7 +78,7 @@ const filtroEstado = ref('Tots'); // Estado para el filtro de estado
 let socket = null;
 
 const connectSocket = () => {
-    socket = io("http://localhost:3001");
+    socket = io("http://tr1g2.dam.inspedralbes.cat:23461");
 
     socket.on('nuevaCompra', (nuevoPedido) => {
         console.log("Nueva compra recibida:", nuevoPedido);
