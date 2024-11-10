@@ -8,8 +8,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const app = express();
-// const port = 3001;
-const port = 23461;
+const port = 3001;
+//const port = 23461;
 
 // Configuración del servidor HTTP y socket.io
 const server = http.createServer(app);
@@ -39,21 +39,21 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Configuración de la conexión a la base de datos
-// const db = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: '',
-//     database: 'tr1_g2-alcohol',
-//     connectTimeout: 10000
-// });
+ const db = mysql.createConnection({
+     host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'tr1_g2-alcohol',
+     connectTimeout: 10000
+ });
 
-const db = mysql.createConnection({
-    host: 'dam.inspedralbes.cat',
-    user: 'a23hashusraf_tr1-g2',
-    password: 'InsPedralbes2024',
-    database: 'a23hashusraf_tr1-g2',
-    waitForConnections: true,
-});
+//const db = mysql.createConnection({
+  //  host: 'dam.inspedralbes.cat',
+   // user: 'a23hashusraf_tr1-g2',
+   // password: 'InsPedralbes2024',
+   // database: 'a23hashusraf_tr1-g2',
+   // waitForConnections: true,
+//});
 
 db.connect((err) => {
     if (err) {
@@ -504,6 +504,6 @@ app.delete('/deleteProducto/:id', (req, res) => {
 });
 // Iniciar el servidor HTTP y socket.io
 server.listen(port, () => {
-    // console.log(`Servidor escuchando en http://localhost:${port}`);
-    console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
+     console.log(`Servidor escuchando en http://localhost:${port}`);
+   // console.log(`Servidor escuchando en http://tr1g2.dam.inspedralbes.cat:${port}`);
 });
