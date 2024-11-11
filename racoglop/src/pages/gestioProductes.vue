@@ -13,8 +13,8 @@
                             <v-card class="product-card">
                                 <v-card-title>{{ producto.producto }}</v-card-title>
                                 <v-card-subtitle>€{{ producto.precio }}</v-card-subtitle>
-                                <v-img :src="`http://localhost:3001/imagen/${producto.imagen}`" max-width="200" class="mx-auto"></v-img>
-                               <!-- <v-img :src="`http://tr1g2.dam.inspedralbes.cat:23461/imagen/${producto.imagen}`" max-width="200" class="mx-auto"></v-img> -->  
+                                <!-- <v-img :src="`http://localhost:3001/imagen/${producto.imagen}`" max-width="200" class="mx-auto"></v-img> -->
+                               <v-img :src="`http://tr1g2.dam.inspedralbes.cat:23462/imagen/${producto.imagen}`" max-width="200" class="mx-auto"></v-img>  
 
                                 <v-card-actions>
                                     <v-btn icon color="blue" @click="openEditDialog(producto)">
@@ -55,6 +55,7 @@
 import { ref, onMounted } from 'vue';
 import { getProductos, addProducto, updateProducto, deleteProducto } from "../service/communicationManager";
 import Header from '../components/header.vue'; 
+import { log10 } from 'core-js/core/number';
 
 const productos = ref([]);
 const dialog = ref(false);
@@ -97,6 +98,8 @@ const closeDialog = () => {
 
 const handleFileUpload = (event) => {
     selectedFile.value = event.target.files[0];
+    console.log(event.target.files[0]);
+    
 };
 
 const submitForm = async () => {

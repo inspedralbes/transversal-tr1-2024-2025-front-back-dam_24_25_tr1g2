@@ -78,7 +78,8 @@ const filtroEstado = ref('Tots'); // Estado para el filtro de estado
 let socket = null;
 
 const connectSocket = () => {
-    socket = io("http://localhost:3001");ç
+    // socket = io("http://localhost:3001");
+    socket = io("http://tr1g2.dam.inspedralbes.cat:23462");
     //<v-img :src="`http://tr1g2.dam.inspedralbes.cat:23461/imagen/${producto.imagen}`" max-width="200" class="mx-auto"></v-img>
 
 

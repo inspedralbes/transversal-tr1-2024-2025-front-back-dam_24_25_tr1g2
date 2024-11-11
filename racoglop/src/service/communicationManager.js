@@ -1,5 +1,5 @@
-let ruta = 'http://localhost:3001';
-//let ruta = 'http://tr1g2.dam.inspedralbes.cat:23461';
+// let ruta = 'http://localhost:3001';
+let ruta = 'http://tr1g2.dam.inspedralbes.cat:23462';
 
 // Función para obtener las comandas desde el servidor
 export const getComandas = async () => {
@@ -33,10 +33,7 @@ export const addProducto = async (data) => {
     try {
         const response = await fetch(`${ruta}/addProducto`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data),
+            body: data,
         });
         if (!response.ok) {
             throw new Error('Error al agregar el producto');
